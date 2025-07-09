@@ -26,7 +26,6 @@ class CreatorController extends CrudController
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'bio' => 'required|string',
             'specialization' => 'required|in:VIDEO,PHOTOGRAPHY,GRAPHIC_DESIGN,ANIMATION,OTHER',
             'portfolio_url' => 'nullable|url|max:255',
             'social_media_links' => 'nullable|array',
@@ -57,7 +56,6 @@ class CreatorController extends CrudController
     protected function getUpdateValidationRules(): array
     {
         return [
-            'bio' => 'sometimes|required|string',
             'specialization' => 'sometimes|required|in:VIDEO,PHOTOGRAPHY,GRAPHIC_DESIGN,ANIMATION,OTHER',
             'portfolio_url' => 'nullable|url|max:255',
             'social_media_links' => 'nullable|array',

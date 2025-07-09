@@ -44,8 +44,6 @@ return new class extends Migration
             // Certifications as JSON array of objects
             $table->json('certifications')->nullable();
 
-            $table->text('biography');
-
             // Equipment info as JSON object
             $table->json('equipment_info')->nullable();
 

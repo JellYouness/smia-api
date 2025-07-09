@@ -24,6 +24,7 @@ Route::prefix('auth')->name('auth.')->group(
                 Route::post('/register', 'register');
                 Route::post('/request-password-reset', 'requestPasswordReset');
                 Route::post('/reset-password', 'resetPassword');
+                Route::post('/resend-email-verification', 'resendEmailVerification')->middleware('throttle:6,1');
                 Route::get('/verify-email/{id}/{hash}', 'verifyEmail')->name('verification.verify');
                 Route::get(
                     '/disconnected',
@@ -44,6 +45,8 @@ Route::middleware('auth:api')->group(
                     function () {
                         Route::post('/me', 'me');
                         Route::post('/logout', 'logout');
+                        Route::put('/profile', 'updateProfile');
+                        Route::post('/complete-profile', 'completeProfile');
                     }
                 );
             }

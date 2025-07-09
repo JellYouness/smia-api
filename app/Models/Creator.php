@@ -26,14 +26,18 @@ class Creator extends Model
         'is_journalist',
         'media_types',
         'certifications',
-        'biography',
         'equipment_info',
+        'education',
+        'professional_background',
+        'achievements',
     ];
 
     protected $casts = [
         'social_media_links' => 'array',
         'preferred_industries' => 'array',
         'skills' => 'array',
+        'media_types' => 'array',
+        'regional_expertise' => 'array',
         'equipment' => 'array',
         'software' => 'array',
         'languages' => 'array',
@@ -41,6 +45,9 @@ class Creator extends Model
         'preferred_project_types' => 'array',
         'working_hours' => 'array',
         'insurance_info' => 'array',
+        'education' => 'array',
+        'professional_background' => 'array',
+        'achievements' => 'array',
     ];
 
     /**

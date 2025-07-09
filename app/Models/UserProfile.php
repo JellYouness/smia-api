@@ -22,6 +22,7 @@ class UserProfile extends Model
         'postal_code',
         'profile_picture',
         'bio',
+        'title',
         'date_of_birth',
         'gender',
         'preferred_language',
@@ -31,6 +32,13 @@ class UserProfile extends Model
         'social_media_links',
         'emergency_contact',
         'preferences',
+        'contact_email',
+        'contact_phone',
+        'profile_visibility',
+        'profile_completeness',
+        'cover_image',
+        'display_name',
+        'audio_introduction',
     ];
 
     protected $casts = [
@@ -40,6 +48,7 @@ class UserProfile extends Model
         'social_media_links' => 'array',
         'emergency_contact' => 'array',
         'preferences' => 'array',
+        'last_updated' => 'datetime',
     ];
 
     /**

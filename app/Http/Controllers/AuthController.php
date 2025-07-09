@@ -2,17 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Language;
 use App\Enums\ROLE;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
-use App\Models\User;
+use App\Models\Ambassador;
+use App\Models\Client;
 use App\Models\Creator;
-use DB;
+use App\Models\SystemAdministrator;
+use App\Models\User;
+use App\Models\UserProfile;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -28,11 +37,15 @@ class AuthController extends Controller
                 return response()->json(['success' => false, 'errors' => [__('auth.not_admin')]]);
             }
 
+            // Load user with all relationships
+            $userWithRelations = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])
+                ->find($user->id);
+
             return response()->json(
                 [
                     'success' => true,
                     'data' => [
-                        'user' => $user,
+                        'user' => $userWithRelations,
                     ],
                 ]
             );
@@ -119,12 +132,20 @@ class AuthController extends Controller
                             'user_id' => $user->id,
                         ]);
                     } elseif ($data['user_type'] === 'creator') {
+                        // Format regional expertise data to match expected structure
+                        $regionalExpertise = array_map(function ($region) {
+                            return [
+                                'region' => $region,
+                                'expertise_level' => 'BEGINNER' // Default level, can be updated later
+                            ];
+                        }, $data['regions']);
+
                         $creator = Creator::create([
                             'user_id' => $user->id,
                             'skills' => $data['skills'],
                             'media_types' => $data['media_types'],
                             'experience' => 0, // Default experience level
-                            'regional_expertise' => $data['regions'],
+                            'regional_expertise' => $regionalExpertise,
                             'languages' => $data['languages'],
                             'biography' => $data['biography'],
                             'verification_status' => 'UNVERIFIED',
@@ -255,6 +276,322 @@ class AuthController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error caught in function AuthController.verifyEmail: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function resendEmailVerification(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email|exists:users,email',
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user) {
+                return response()->json(['success' => false, 'errors' => [__('auth.user_not_found')]]);
+            }
+
+            if ($user->hasVerifiedEmail()) {
+                return response()->json(['success' => false, 'errors' => [__('auth.email_already_verified')]]);
+            }
+
+            // Check if user is in PENDING status (not verified)
+            if ($user->status !== 'PENDING') {
+                return response()->json(['success' => false, 'errors' => [__('auth.user_not_pending_verification')]]);
+            }
+
+            // Send email verification
+            $user->sendEmailVerificationNotification();
+
+            return response()->json([
+                'success' => true,
+                'message' => __('auth.verification_email_resent'),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function AuthController.resendEmailVerification: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'errors' => [__('auth.user_not_found')]]);
+            }
+
+            return DB::transaction(function () use ($request, $user) {
+                // Validate user data
+                $userValidationRules = [
+                    'first_name' => 'sometimes|required|string|max:255',
+                    'last_name' => 'sometimes|required|string|max:255',
+                    'phone_number' => 'nullable|string|max:20',
+                    'address' => 'nullable|string|max:255',
+                    'city' => 'nullable|string|max:255',
+                    'state' => 'nullable|string|max:255',
+                    'country' => 'nullable|string|max:100',
+                    'postal_code' => 'nullable|string|max:20',
+                    'bio' => 'nullable|string|max:1000',
+                    'title' => 'nullable|string|max:255',
+                    'preferred_language' => 'nullable|string|in:' . implode(',', array_values(Language::getCodes())),
+                    'timezone' => 'nullable|string|max:100',
+                    'password' => 'nullable|string|min:8',
+                ];
+
+                $validatedUserData = $request->validate($userValidationRules);
+
+                // Convert preferred_language from frontend code to enum value
+                if (isset($validatedUserData['preferred_language'])) {
+                    $languageEnum = Language::fromCode($validatedUserData['preferred_language']);
+                    if ($languageEnum) {
+                        $validatedUserData['preferred_language'] = $languageEnum->value;
+                    } else {
+                        throw ValidationException::withMessages([
+                            'preferred_language' => ['Invalid language code provided.']
+                        ]);
+                    }
+                }
+
+                // Update user data
+                if (!empty($validatedUserData)) {
+                    // Hash password if provided
+                    if (isset($validatedUserData['password'])) {
+                        $validatedUserData['password'] = Hash::make($validatedUserData['password']);
+                    }
+
+                    $user->update($validatedUserData);
+                }
+
+                // Handle creator-specific updates
+                if ($user->hasRole(ROLE::CREATOR) && $user->creator) {
+                    $creatorValidationRules = [
+                        'skills' => 'nullable|array',
+                        'skills.*' => 'string',
+                        'media_types' => 'nullable|array',
+                        'media_types.*' => 'string',
+                        'experience' => 'nullable|integer|min:0',
+                        'hourly_rate' => 'nullable|numeric|min:0',
+                        'availability' => 'nullable|string|in:AVAILABLE,LIMITED,UNAVAILABLE,BUSY',
+                        'biography' => 'nullable|string|max:2000',
+                        'languages' => 'nullable|array',
+                        'languages.*.language' => 'required|string',
+                        'languages.*.proficiency' => 'required|string|in:BASIC,INTERMEDIATE,FLUENT,NATIVE',
+                        'regional_expertise' => 'nullable|array',
+                        'regional_expertise.*.region' => 'required|string',
+                        'regional_expertise.*.expertise_level' => 'required|string|in:BEGINNER,INTERMEDIATE,EXPERT',
+                    ];
+
+                    $validatedCreatorData = $request->validate($creatorValidationRules);
+
+                    if (!empty($validatedCreatorData)) {
+                        $user->creator->update($validatedCreatorData);
+                    }
+                }
+
+                // Handle client-specific updates
+                if ($user->hasRole(ROLE::CLIENT) && $user->client) {
+                    $clientValidationRules = [
+                        'company_name' => 'nullable|string|max:255',
+                        'company_size' => 'nullable|string|max:100',
+                        'industry' => 'nullable|string|max:255',
+                        'website_url' => 'nullable|url|max:255',
+                        'budget' => 'nullable|numeric|min:0',
+                        'preferred_creators' => 'nullable|array',
+                        'preferred_creators.*' => 'integer|exists:users,id',
+                    ];
+
+                    $validatedClientData = $request->validate($clientValidationRules);
+
+                    if (!empty($validatedClientData)) {
+                        $user->client->update($validatedClientData);
+                    }
+                }
+
+                // Reload user with relationships
+                $updatedUser = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])
+                    ->find($user->id);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => __('user.profile_updated_successfully'),
+                    'data' => [
+                        'user' => $updatedUser,
+                    ],
+                ]);
+            });
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'errors' => $e->errors()]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function AuthController.updateProfile: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function completeProfile(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'errors' => [__('auth.user_not_found')]]);
+            }
+
+            // Check if user has verified email
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json(['success' => false, 'errors' => [__('auth.email_not_verified')]]);
+            }
+
+            return DB::transaction(function () use ($request, $user) {
+                // Validate profile data
+                $profileValidationRules = [
+                    'phone_number' => 'nullable|string|max:20',
+                    'address' => 'nullable|string|max:255',
+                    'city' => 'nullable|string|max:255',
+                    'state' => 'nullable|string|max:255',
+                    'country' => 'nullable|string|max:100',
+                    'postal_code' => 'nullable|string|max:20',
+                    'bio' => 'nullable|string|max:1000',
+                    'title' => 'nullable|string|max:255',
+                    'date_of_birth' => 'nullable|date',
+                    'gender' => 'nullable|in:MALE,FEMALE,OTHER',
+                    'preferred_language' => 'nullable|string|in:' . implode(',', array_values(Language::getCodes())),
+                    'timezone' => 'nullable|string|max:100',
+                    'profile_picture' => 'nullable|string|max:255',
+                    'notification_preferences' => 'nullable|array',
+                    'privacy_settings' => 'nullable|array',
+                    'social_media_links' => 'nullable|array',
+                    'emergency_contact' => 'nullable|array',
+                    'preferences' => 'nullable|array',
+                    'education' => 'nullable|array',
+                    'education.*.degree' => 'nullable|string|max:255',
+                    'education.*.field' => 'nullable|string|max:255',
+                    'education.*.institution' => 'nullable|string|max:255',
+                    'education.*.year' => 'nullable|string|max:10',
+                    'professional_background' => 'nullable|array',
+                    'professional_background.*.title' => 'nullable|string|max:255',
+                    'professional_background.*.company' => 'nullable|string|max:255',
+                    'professional_background.*.duration' => 'nullable|string|max:100',
+                    'professional_background.*.description' => 'nullable|string|max:1000',
+                    'achievements' => 'nullable|array',
+                    'achievements.*' => 'nullable|string|max:255',
+                ];
+
+                $validatedProfileData = $request->validate($profileValidationRules);
+
+                // Convert preferred_language from frontend code to enum value
+                if (isset($validatedProfileData['preferred_language'])) {
+                    $languageEnum = Language::fromCode($validatedProfileData['preferred_language']);
+                    if ($languageEnum) {
+                        $validatedProfileData['preferred_language'] = $languageEnum->value;
+                    } else {
+                        throw ValidationException::withMessages([
+                            'preferred_language' => ['Invalid language code provided.']
+                        ]);
+                    }
+                }
+
+                // Update user basic info
+                $user->update([
+                    'phone_number' => $validatedProfileData['phone_number'] ?? $user->phone_number,
+                    'preferred_language' => $validatedProfileData['preferred_language'] ?? $user->preferred_language,
+                    'timezone' => $validatedProfileData['timezone'] ?? $user->timezone,
+                ]);
+
+                // Create or update user profile
+                $profileData = [
+                    'user_id' => $user->id,
+                    'phone_number' => $validatedProfileData['phone_number'] ?? null,
+                    'address' => $validatedProfileData['address'] ?? null,
+                    'city' => $validatedProfileData['city'] ?? null,
+                    'state' => $validatedProfileData['state'] ?? null,
+                    'country' => $validatedProfileData['country'] ?? null,
+                    'postal_code' => $validatedProfileData['postal_code'] ?? null,
+                    'bio' => $validatedProfileData['bio'] ?? null,
+                    'title' => $validatedProfileData['title'] ?? null,
+                    'date_of_birth' => $validatedProfileData['date_of_birth'] ?? null,
+                    'gender' => $validatedProfileData['gender'] ?? null,
+                    'preferred_language' => $validatedProfileData['preferred_language'] ?? null,
+                    'timezone' => $validatedProfileData['timezone'] ?? null,
+                    'profile_picture' => $validatedProfileData['profile_picture'] ?? null,
+                    'notification_preferences' => $validatedProfileData['notification_preferences'] ?? null,
+                    'privacy_settings' => $validatedProfileData['privacy_settings'] ?? null,
+                    'social_media_links' => $validatedProfileData['social_media_links'] ?? null,
+                    'emergency_contact' => $validatedProfileData['emergency_contact'] ?? null,
+                    'preferences' => $validatedProfileData['preferences'] ?? null,
+                ];
+
+                // Remove null values
+                $profileData = array_filter($profileData, function ($value) {
+                    return $value !== null;
+                });
+
+                if ($user->profile) {
+                    $user->profile->update($profileData);
+                } else {
+                    UserProfile::create($profileData);
+                }
+
+                // Handle creator-specific data (education, professional background, achievements)
+                if ($user->hasRole(ROLE::CREATOR) && $user->creator) {
+                    $creatorUpdateData = [];
+
+                    // Handle education data
+                    if (isset($validatedProfileData['education'])) {
+                        $education = $validatedProfileData['education'];
+                        if (!empty(array_filter($education))) {
+                            $creatorUpdateData['education'] = $education;
+                        }
+                    }
+
+                    // Handle professional background data
+                    if (isset($validatedProfileData['professional_background'])) {
+                        $professionalBackground = $validatedProfileData['professional_background'];
+                        if (!empty(array_filter($professionalBackground))) {
+                            $creatorUpdateData['professional_background'] = $professionalBackground;
+                        }
+                    }
+
+                    // Handle achievements data
+                    if (isset($validatedProfileData['achievements']) && !empty($validatedProfileData['achievements'])) {
+                        $achievements = $validatedProfileData['achievements'];
+                        if (!empty($achievements)) {
+                            $creatorUpdateData['achievements'] = $achievements;
+                        }
+                    }
+
+                    // Update creator if there's data to update
+                    if (!empty($creatorUpdateData)) {
+                        $user->creator->update($creatorUpdateData);
+                    }
+                }
+
+                // Update user status to ACTIVE
+                $user->update(['status' => 'ACTIVE']);
+
+                // Reload user with relationships
+                $updatedUser = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])
+                    ->find($user->id);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => __('user.profile_completed_successfully'),
+                    'data' => [
+                        'user' => $updatedUser,
+                    ],
+                ]);
+            });
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'errors' => $e->errors()]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function AuthController.completeProfile: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
