@@ -9,53 +9,91 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Creator extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'skills',
-        'verification_status',
-        'portfolio',
-        'experience',
-        'hourly_rate',
-        'availability',
-        'average_rating',
-        'rating_count',
-        'regional_expertise',
-        'languages',
-        'is_journalist',
-        'media_types',
-        'certifications',
-        'biography',
-        'equipment_info',
+  protected $fillable = [
+    'user_id',
+    'skills',
+    'verification_status',
+    'portfolio',
+    'experience',
+    'hourly_rate',
+    'availability',
+    'average_rating',
+    'rating_count',
+    'regional_expertise',
+    'languages',
+    'is_journalist',
+    'media_types',
+    'certifications',
+    'biography',
+    'equipment_info',
+  ];
+
+  protected $casts = [
+    'social_media_links' => 'array',
+    'preferred_industries' => 'array',
+    'skills' => 'array',
+    'equipment' => 'array',
+    'software' => 'array',
+    'languages' => 'array',
+    'certifications' => 'array',
+    'preferred_project_types' => 'array',
+    'working_hours' => 'array',
+    'insurance_info' => 'array',
+  ];
+
+  /**
+   * Get the user that owns the creator.
+   */
+  public function user(): BelongsTo
+  {
+    return $this->belongsTo(User::class);
+  }
+
+  /**
+   * Get the projects for the creator.
+   */
+  public function projects(): HasMany
+  {
+    return $this->hasMany(Project::class);
+  }
+
+  /**
+   * Validation rules for creating or updating a Creator.
+   * If $id is provided, use 'sometimes|required' for update context.
+   */
+  public static function rules($id = null): array
+  {
+    $id = $id ?? request()->route('id');
+    $required = $id ? 'sometimes|required' : 'required';
+    return [
+      'user_id' => $id ? 'sometimes|exists:users,id' : 'required|exists:users,id',
+      'bio' => "$required|string",
+      'specialization' => "$required|in:VIDEO,PHOTOGRAPHY,GRAPHIC_DESIGN,ANIMATION,OTHER",
+      'portfolio_url' => 'nullable|url|max:255',
+      'social_media_links' => 'nullable|array',
+      'equipment' => 'nullable|array',
+      'availability' => 'nullable|array',
+      'pricing' => 'nullable|array',
+      'is_verified' => 'boolean',
+      'verification_documents' => 'nullable|array',
+      'rating' => 'nullable|numeric|min:0|max:5',
+      'total_projects' => 'integer|min:0',
+      'completed_projects' => 'integer|min:0',
+      'cancelled_projects' => 'integer|min:0',
+      'is_featured' => 'boolean',
+      'featured_until' => 'nullable|date',
+      'payment_info' => 'nullable|array',
+      'tax_info' => 'nullable|array',
+      'preferred_communication' => 'nullable|in:EMAIL,PHONE,VIDEO_CALL,IN_PERSON',
+      'languages' => 'nullable|array',
+      'travel_radius' => 'nullable|integer|min:0',
+      'insurance_info' => 'nullable|array',
+      'contract_templates' => 'nullable|array',
+      'is_available' => 'boolean',
+      'unavailable_until' => 'nullable|date',
+      'unavailable_reason' => 'nullable|string',
     ];
-
-    protected $casts = [
-        'social_media_links' => 'array',
-        'preferred_industries' => 'array',
-        'skills' => 'array',
-        'equipment' => 'array',
-        'software' => 'array',
-        'languages' => 'array',
-        'certifications' => 'array',
-        'preferred_project_types' => 'array',
-        'working_hours' => 'array',
-        'insurance_info' => 'array',
-    ];
-
-    /**
-     * Get the user that owns the creator.
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Get the projects for the creator.
-     */
-    public function projects(): HasMany
-    {
-        return $this->hasMany(Project::class);
-    }
+  }
 }
