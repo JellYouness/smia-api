@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             CreatorSeeder::class,
             AmbassadorSeeder::class,
             SystemAdministratorSeeder::class,
+            ProjectSeeder::class,
         ]);
     }
 }
