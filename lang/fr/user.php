@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'profile_updated_successfully' => 'Profil mis à jour avec succès',
+    'profile_completed_successfully' => 'Profil complété avec succès',
+    'company_updated_successfully' => 'Informations de l\'entreprise mises à jour avec succès',
+    'billing_updated_successfully' => 'Informations de facturation mises à jour avec succès',
+    'budget_updated_successfully' => 'Budget mis à jour avec succès',
+    'project_settings_updated_successfully' => 'Paramètres du projet mis à jour avec succès',
+    'preferred_creators_updated_successfully' => 'Créateurs préférés mis à jour avec succès',
+    'client_profile_not_found' => 'Profil client introuvable',
+    'user_not_client' => 'L\'utilisateur n\'est pas un client',
+    'company_information' => 'Informations de l\'entreprise',
+    'billing_information' => 'Informations de facturation',
+    'project_settings' => 'Paramètres du projet',
+    'preferred_creators' => 'Créateurs préférés',
+    'budget_range' => 'Plage de budget',
+    'company_size' => 'Taille de l\'entreprise',
+    'industry' => 'Industrie',
+    'website' => 'Site web',
+    'tax_identifier' => 'Identifiant fiscal',
+    'billing_address' => 'Adresse de facturation',
+    'default_project_settings' => 'Paramètres de projet par défaut',
+    'timeline' => 'Calendrier',
+    'requirements' => 'Exigences',
+];

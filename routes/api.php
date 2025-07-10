@@ -4,6 +4,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientProfileController;
+use App\Http\Controllers\CreatorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +64,37 @@ Route::middleware('auth:api')->group(
                         Route::put('/{id}', 'updateOne');
                         Route::patch('/{id}', 'patchOne');
                         Route::delete('/{id}', 'deleteOne');
+
+                        // Profile section specific routes
+                        Route::put('/{id}/about', 'updateAbout');
+                        Route::put('/{id}/portfolio', 'updatePortfolio');
+                        Route::put('/{id}/skills', 'updateSkills');
+                        Route::put('/{id}/certifications', 'updateCertifications');
+                        Route::put('/{id}/employment', 'updateEmployment');
+                        Route::put('/{id}/achievements', 'updateAchievements');
+                        Route::put('/{id}/equipment', 'updateEquipment');
+                        Route::put('/{id}/regional-expertise', 'updateRegionalExpertise');
+                        Route::put('/{id}/media-types', 'updateMediaTypes');
+                        Route::put('/{id}/languages', 'updateLanguages');
+                        Route::put('/{id}/education', 'updateEducation');
+
+                        // Client-specific routes
+                        Route::put('/{id}/company', 'updateCompany');
+                        Route::put('/{id}/billing', 'updateBilling');
+                        Route::put('/{id}/budget', 'updateBudget');
+                        Route::put('/{id}/project-settings', 'updateProjectSettings');
+                    }
+                );
+
+                // Client Profile Controller routes
+                Route::controller(ClientProfileController::class)->group(
+                    function () {
+                        Route::get('/{id}/client-profile', 'getClientProfile');
+                        Route::put('/{id}/client/company', 'updateCompany');
+                        Route::put('/{id}/client/billing', 'updateBilling');
+                        Route::put('/{id}/client/budget', 'updateBudget');
+                        Route::put('/{id}/client/project-settings', 'updateProjectSettings');
+                        Route::put('/{id}/client/preferred-creators', 'updatePreferredCreators');
                     }
                 );
             }

@@ -48,6 +48,8 @@ class Creator extends Model
         'education' => 'array',
         'professional_background' => 'array',
         'achievements' => 'array',
+        'portfolio' => 'array',
+        'equipment_info' => 'array',
     ];
 
     /**

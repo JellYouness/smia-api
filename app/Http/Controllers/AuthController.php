@@ -41,6 +41,37 @@ class AuthController extends Controller
             $userWithRelations = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])
                 ->find($user->id);
 
+            // Parse JSON fields to arrays for creator data
+            if ($userWithRelations->creator) {
+                $creator = $userWithRelations->creator;
+
+                // Parse JSON fields that might not be in the casts array
+                $jsonFields = [
+                    'languages',
+                    'education',
+                    'certifications',
+                    'achievements',
+                    'professional_background',
+                    'portfolio',
+                    'equipment_info',
+                    'regional_expertise',
+                    'skills',
+                    'media_types'
+                ];
+
+                foreach ($jsonFields as $field) {
+                    if (isset($creator->$field) && is_string($creator->$field)) {
+                        try {
+                            $creator->$field = json_decode($creator->$field, true) ?: [];
+                        } catch (\Exception $e) {
+                            $creator->$field = [];
+                        }
+                    } elseif (!isset($creator->$field)) {
+                        $creator->$field = [];
+                    }
+                }
+            }
+
             return response()->json(
                 [
                     'success' => true,
@@ -399,12 +430,22 @@ class AuthController extends Controller
                 if ($user->hasRole(ROLE::CLIENT) && $user->client) {
                     $clientValidationRules = [
                         'company_name' => 'nullable|string|max:255',
-                        'company_size' => 'nullable|string|max:100',
-                        'industry' => 'nullable|string|max:255',
+                        'company_size' => 'nullable|string|in:INDIVIDUAL,SMALL,MEDIUM,LARGE,ENTERPRISE',
+                        'industry' => 'nullable|string|in:MEDIA,EDUCATION,HEALTHCARE,TECHNOLOGY,FINANCE,ENTERTAINMENT,OTHER',
                         'website_url' => 'nullable|url|max:255',
-                        'budget' => 'nullable|numeric|min:0',
+                        'budget' => 'nullable|string|in:SMALL,MEDIUM,LARGE,ENTERPRISE',
+                        'billing_street' => 'nullable|string|max:255',
+                        'billing_city' => 'nullable|string|max:255',
+                        'billing_state' => 'nullable|string|max:255',
+                        'billing_postal_code' => 'nullable|string|max:20',
+                        'billing_country' => 'nullable|string|max:255',
+                        'tax_identifier' => 'nullable|string|max:50',
                         'preferred_creators' => 'nullable|array',
                         'preferred_creators.*' => 'integer|exists:users,id',
+                        'default_project_settings' => 'nullable|array',
+                        'default_project_settings.budget' => 'nullable|numeric|min:0',
+                        'default_project_settings.timeline' => 'nullable|string|max:255',
+                        'default_project_settings.requirements' => 'nullable|string|max:1000',
                     ];
 
                     $validatedClientData = $request->validate($clientValidationRules);
