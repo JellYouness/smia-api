@@ -2,30 +2,39 @@
 
 namespace Database\Seeders\Permissions;
 
+use App\Enums\ROLE as ROLE_ENUM;
+use App\Models\Role;
 use App\Services\ACLService;
 use Illuminate\Database\Seeder;
 
 class CrudPermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run(ACLService $aclService)
-    {
-        /*
-            // Here, include project specific permissions. E.G.:
-            $aclService->createScopePermissions('interests', ['create', 'read', 'update', 'delete', 'import', 'export']);
-            $aclService->createScopePermissions('games', ['create', 'read', 'read_own', 'update', 'delete']);
+  private ACLService $aclService;
 
-            $adminRole = Role::where('name', ROLE_ENUM::ADMIN)->first();
-            $aclService->assignScopePermissionsToRole($adminRole, 'interests', ['create', 'read', 'update', 'delete', 'import', 'export']);
-            $aclService->assignScopePermissionsToRole($adminRole, 'games', ['create', 'read', 'read_own', 'update', 'delete']);
+  public function __construct(ACLService $aclService)
+  {
+    $this->aclService = $aclService;
+  }
+  /**
+   * Run the database seeds.
+   *
+   * @return void
+   */
+  public function run()
+  {
+    $this->aclService->createScopePermissions('projects', ['create', 'read', 'read_own', 'update', 'delete']);
 
-            $advertiserRole = Role::where('name', 'advertiser')->first();
-            $aclService->assignScopePermissionsToRole($advertiserRole, 'interests', ['read']);
-            $aclService->assignScopePermissionsToRole($advertiserRole, 'games', ['create', 'read_own']);
-        */
-    }
+    $creatorRole = Role::where('name', ROLE_ENUM::CREATOR)->first();
+    $this->aclService->assignScopePermissionsToRole($creatorRole, 'projects', ['read_own']);
+
+    $clientRole = Role::where('name', ROLE_ENUM::CLIENT)->first();
+    $this->aclService->assignScopePermissionsToRole($clientRole, 'projects', ['create', 'read_own', 'update', 'delete']);
+
+
+    $ambassadorRole = Role::where('name', ROLE_ENUM::AMBASSADOR)->first();
+    $this->aclService->assignScopePermissionsToRole($ambassadorRole, 'projects', ['create', 'read_own', 'update', 'delete']);
+
+    $systemAdministratorRole = Role::where('name', ROLE_ENUM::SYSTEM_ADMINISTRATOR)->first();
+    $this->aclService->assignScopePermissionsToRole($systemAdministratorRole, 'projects', ['create', 'read', 'update', 'delete']);
+  }
 }
