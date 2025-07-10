@@ -31,7 +31,7 @@ class UserController extends CrudController
 
             return parent::createOne($request);
         } catch (\Exception $e) {
-            Log::error('Error caught in function UserController.createOne : '.$e->getMessage());
+            Log::error('Error caught in function UserController.createOne : ' . $e->getMessage());
             Log::error($e->getTraceAsString());
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
@@ -44,7 +44,7 @@ class UserController extends CrudController
             $roleEnum = ROLE::from($request->role);
             $item->syncRoles([$roleEnum]);
         } catch (\Exception $e) {
-            Log::error('Error caught in function UserController.afterCreateOne : '.$e->getMessage());
+            Log::error('Error caught in function UserController.afterCreateOne : ' . $e->getMessage());
             Log::error($e->getTraceAsString());
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
@@ -62,7 +62,7 @@ class UserController extends CrudController
 
             return parent::updateOne($id, $request);
         } catch (\Exception $e) {
-            Log::error('Error caught in function UserController.updateOne : '.$e->getMessage());
+            Log::error('Error caught in function UserController.updateOne : ' . $e->getMessage());
             Log::error($e->getTraceAsString());
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
@@ -75,7 +75,379 @@ class UserController extends CrudController
             $roleEnum = ROLE::from($request->role);
             $item->syncRoles([$roleEnum]);
         } catch (\Exception $e) {
-            Log::error('Error caught in function UserController.afterUpdateOne : '.$e->getMessage());
+            Log::error('Error caught in function UserController.afterUpdateOne : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    // Profile section specific update methods
+    public function updateAbout($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->profile->update([
+                'title' => $request->title,
+                'bio' => $request->bio,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'About updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateAbout : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updatePortfolio($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'portfolio' => json_encode($request->portfolio)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Portfolio updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updatePortfolio : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateSkills($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'skills' => json_encode($request->skills)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Skills updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateSkills : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateCertifications($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'certifications' => json_encode($request->certifications)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Certifications updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateCertifications : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateEmployment($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'professional_background' => json_encode($request->professional_background)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Employment history updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateEmployment : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateAchievements($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'achievements' => json_encode($request->achievements)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Achievements updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateAchievements : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateEquipment($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'equipment_info' => json_encode($request->equipment_info)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Equipment updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateEquipment : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateRegionalExpertise($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'regional_expertise' => json_encode($request->regional_expertise)
+            ]);
+
+            Log::info('Regional expertise updated successfully', ['regionalExpertise' => $request->regional_expertise]);
+            Log::info('Regional expertise updated successfully', ['jsonregionalExpertise' => json_encode($request->regional_expertise)]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Regional expertise updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateRegionalExpertise : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateMediaTypes($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'media_types' => json_encode($request->media_types)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Media types updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateMediaTypes : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateLanguages($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'languages' => json_encode($request->languages)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Languages updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateLanguages : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateEducation($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->creator->update([
+                'education' => json_encode($request->education)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Education updated successfully',
+                'data' => $user->fresh()->load('profile', 'creator')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateEducation : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    // Client-specific update methods
+    public function updateCompany($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            if (!$user->client) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a client']
+                ]);
+            }
+
+            $validated = $request->validate([
+                'company_name' => 'required|string|max:255',
+                'company_size' => 'required|in:INDIVIDUAL,SMALL,MEDIUM,LARGE,ENTERPRISE',
+                'industry' => 'required|in:MEDIA,EDUCATION,HEALTHCARE,TECHNOLOGY,FINANCE,ENTERTAINMENT,OTHER',
+                'website_url' => 'nullable|url|max:255',
+            ]);
+
+            $user->client->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Company information updated successfully',
+                'data' => $user->fresh()->load('profile', 'client')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateCompany : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateBilling($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            if (!$user->client) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a client']
+                ]);
+            }
+
+            $validated = $request->validate([
+                'billing_street' => 'required|string|max:255',
+                'billing_city' => 'required|string|max:255',
+                'billing_state' => 'required|string|max:255',
+                'billing_postal_code' => 'required|string|max:20',
+                'billing_country' => 'required|string|max:255',
+                'tax_identifier' => 'nullable|string|max:50',
+            ]);
+
+            $user->client->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Billing information updated successfully',
+                'data' => $user->fresh()->load('profile', 'client')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateBilling : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateBudget($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            if (!$user->client) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a client']
+                ]);
+            }
+
+            $validated = $request->validate([
+                'budget' => 'required|in:SMALL,MEDIUM,LARGE,ENTERPRISE',
+            ]);
+
+            $user->client->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Budget updated successfully',
+                'data' => $user->fresh()->load('profile', 'client')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateBudget : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function updateProjectSettings($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            if (!$user->client) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a client']
+                ]);
+            }
+
+            $validated = $request->validate([
+                'default_project_settings' => 'nullable|array',
+                'default_project_settings.budget' => 'nullable|numeric|min:0',
+                'default_project_settings.timeline' => 'nullable|string|max:255',
+                'default_project_settings.requirements' => 'nullable|string|max:1000',
+            ]);
+
+            $user->client->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Project settings updated successfully',
+                'data' => $user->fresh()->load('profile', 'client')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateProjectSettings : ' . $e->getMessage());
             Log::error($e->getTraceAsString());
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
