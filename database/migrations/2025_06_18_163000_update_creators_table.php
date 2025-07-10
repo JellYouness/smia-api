@@ -65,11 +65,8 @@ class UpdateCreatorsTable extends Migration
             if (!Schema::hasColumn('creators', 'certifications')) {
                 $table->json('certifications')->nullable()->after('media_types');
             }
-            if (!Schema::hasColumn('creators', 'biography')) {
-                $table->text('biography')->after('certifications');
-            }
             if (!Schema::hasColumn('creators', 'equipment_info')) {
-                $table->json('equipment_info')->nullable()->after('biography');
+                $table->json('equipment_info')->nullable()->after('certifications');
             }
         });
     }
@@ -89,7 +86,6 @@ class UpdateCreatorsTable extends Migration
                 'is_journalist',
                 'media_types',
                 'certifications',
-                'biography',
                 'equipment_info'
             ];
 

@@ -35,6 +35,8 @@ return [
     'email_already_verified' => 'Email déjà vérifié.',
     'invalid_verification_link' => 'Lien de vérification invalide.',
     'email_verified_success' => 'Email vérifié avec succès.',
+    'verification_email_resent' => 'L\'email de vérification a été renvoyé avec succès.',
+    'user_not_pending_verification' => 'L\'utilisateur n\'est pas en attente de vérification.',
     'password_min_length' => 'Le mot de passe doit contenir au moins 8 caractères.',
     'passwords_must_match' => 'Les mots de passe doivent correspondre.',
     'first_name_min_length' => 'Le prénom doit contenir au moins 2 caractères.',

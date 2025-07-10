@@ -44,6 +44,7 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
         'two_factor_enabled',
         'accepted_terms',
         'email_verified',
+        'email_verified_at',
         'preferred_language',
         'timezone',
     ];

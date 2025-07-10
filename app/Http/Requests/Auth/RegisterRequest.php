@@ -41,7 +41,6 @@ class RegisterRequest extends FormRequest
             'languages' => ['required_if:user_type,creator', 'array'],
             'languages.*.language' => ['required', 'string'],
             'languages.*.proficiency' => ['required', 'string'],
-            'biography' => ['required_if:user_type,creator', 'string'],
         ];
     }
 
