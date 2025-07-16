@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 
 class ClientController extends CrudController
 {
@@ -25,5 +26,10 @@ class ClientController extends CrudController
     protected function getRelations(): array
     {
         return ['user'];
+    }
+
+    protected function getReadAllQuery(): Builder
+    {
+        return $this->model()->with('user');
     }
 }

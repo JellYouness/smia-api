@@ -18,10 +18,13 @@ class AmbassadorSeeder extends Seeder
         $ambassadors = User::where('user_type', 'AMBASSADOR')->get();
 
         foreach ($ambassadors as $ambassador) {
+            $creatorIds = User::where('user_type', 'CREATOR')->pluck('id')->toArray();
+            $teamSize = min(rand(1, 3), count($creatorIds));
+            $teamMembers = $teamSize > 0 ? Arr::random($creatorIds, $teamSize) : [];
             Ambassador::create([
                 'user_id' => $ambassador->id,
                 'team_members' => json_encode([
-                    Arr::random(User::where('user_type', 'CREATOR')->pluck('id')->toArray(), rand(1, 3))
+                    $teamMembers
                 ]),
                 'team_name' => fake()->company(),
                 'specializations' => json_encode([

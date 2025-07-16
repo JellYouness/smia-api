@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Creator;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 
 class CreatorController extends CrudController
 {
@@ -25,5 +26,10 @@ class CreatorController extends CrudController
   protected function getRelations(): array
   {
     return ['user'];
+  }
+
+  protected function getReadAllQuery(): Builder
+  {
+    return $this->model()->with('user');
   }
 }

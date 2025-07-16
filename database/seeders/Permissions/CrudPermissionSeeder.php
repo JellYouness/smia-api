@@ -34,7 +34,7 @@ class CrudPermissionSeeder extends Seeder
     $ambassadorRole = Role::where('name', ROLE_ENUM::AMBASSADOR)->first();
     $this->aclService->assignScopePermissionsToRole($ambassadorRole, 'projects', ['create', 'read_own', 'update', 'delete']);
 
-    $systemAdministratorRole = Role::where('name', ROLE_ENUM::SYSTEM_ADMINISTRATOR)->first();
+    $systemAdministratorRole = Role::where('name', ROLE_ENUM::SYSTEM_ADMINISTRATOR->value)->first();
     $this->aclService->assignScopePermissionsToRole($systemAdministratorRole, 'projects', ['create', 'read', 'update', 'delete']);
   }
 }
