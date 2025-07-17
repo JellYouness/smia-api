@@ -174,7 +174,7 @@ Route::middleware('auth:api')->group(
             Route::post('/', 'createOne');
             Route::get('/', 'readAll');
             Route::get('/{id}', 'readOne');
-            Route::post('/{id}', 'updateOne');
+            Route::put('/{id}', 'updateOne');
             Route::delete('/{id}', 'deleteOne');
 
             Route::get('/creator/{creatorId}', 'readAllByCreator');
