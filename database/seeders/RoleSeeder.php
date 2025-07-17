@@ -11,20 +11,24 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             [
-                'name' => 'client',
+                'name' => 'CLIENT',
                 'description' => 'Client role with access to project management and creator search',
             ],
             [
-                'name' => 'creator',
+                'name' => 'CREATOR',
                 'description' => 'Creator role with access to project creation and management',
             ],
             [
-                'name' => 'ambassador',
+                'name' => 'AMBASSADOR',
                 'description' => 'Ambassador role with access to referral program and creator management',
             ],
             [
-                'name' => 'system_administrator',
+                'name' => 'ADMIN',
                 'description' => 'System administrator role with full access to system management',
+            ],
+            [
+                'name' => 'SUPERADMIN',
+                'description' => 'Superadmin role with full access to all entities, including system administrators',
             ],
         ];
 

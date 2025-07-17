@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SystemAdministrator;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 
 class SystemAdministratorController extends CrudController
 {
@@ -24,6 +25,11 @@ class SystemAdministratorController extends CrudController
 
     protected function getRelations(): array
     {
-        return ['user', 'supervisor'];
+        return ['user'];
+    }
+
+    protected function getReadAllQuery(): Builder
+    {
+        return $this->model()->with('user');
     }
 }

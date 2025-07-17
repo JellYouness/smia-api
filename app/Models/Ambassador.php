@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Project;
 
-class Ambassador extends Model
+class Ambassador extends BaseModel
 {
   use HasFactory;
+
+  public static $cacheKey = 'ambassadors';
 
   protected $fillable = [
     'user_id',
@@ -61,6 +62,12 @@ class Ambassador extends Model
     'promotional_materials' => 'array',
     'training_completed' => 'array',
     'support_team' => 'array',
+    'featured_work' => 'array',
+    'specializations' => 'array',
+    'regional_expertise' => 'array',
+    'service_offerings' => 'array',
+    'team_members' => 'array',
+    'verification_documents' => 'array',
   ];
 
   /**
