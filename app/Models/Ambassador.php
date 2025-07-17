@@ -62,6 +62,12 @@ class Ambassador extends BaseModel
     'promotional_materials' => 'array',
     'training_completed' => 'array',
     'support_team' => 'array',
+    'featured_work' => 'array',
+    'specializations' => 'array',
+    'regional_expertise' => 'array',
+    'service_offerings' => 'array',
+    'team_members' => 'array',
+    'verification_documents' => 'array',
   ];
 
   /**
