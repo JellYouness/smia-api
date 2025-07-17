@@ -23,9 +23,11 @@ class ProjectSeeder extends Seeder
         $project1 = Project::create([
             'title' => 'Client Project Example',
             'description' => 'A project created by a client with a linked creator.',
-            'status' => 'pending',
+            'status' => 'draft',
             'client_id' => $client?->id,
             'creator_id' => $creator?->id,
+            'start_date' => now(),
+            'end_date' => now()->addDays(30),
             'budget' => 1000.00,
         ]);
         if ($project1 && $creator) {
@@ -44,8 +46,10 @@ class ProjectSeeder extends Seeder
         $project2 = Project::create([
             'title' => 'Ambassador Project Example',
             'description' => 'A project created by an ambassador with no creators yet.',
-            'status' => 'pending',
+            'status' => 'draft',
             'ambassador_id' => $ambassador?->id,
+            'start_date' => now(),
+            'end_date' => now()->addDays(30),
             'budget' => 2000.00,
         ]);
     }

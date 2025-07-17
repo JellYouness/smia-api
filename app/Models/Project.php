@@ -131,11 +131,11 @@ class Project extends Model
     $required = $id ? 'sometimes|required' : 'required';
     return [
       'title' => "$required|string|max:255",
-      'description' => 'nullable|string',
-      'status' => [$required, 'string', Rule::in(array_column(PROJECT_STATUS::cases(), 'value'))],
-      'start_date' => 'nullable|date',
-      'end_date' => 'nullable|date|after_or_equal:start_date',
-      'budget' => 'nullable|numeric|min:0',
+      'description' => "$required|string",
+      'status' => ['nullable', 'string', Rule::in(array_column(PROJECT_STATUS::cases(), 'value'))],
+      'start_date' => "$required|date",
+      'end_date' => "$required|date|after_or_equal:start_date",
+      'budget' => "$required|numeric|min:0",
       'client_id' => 'nullable|exists:clients,id',
       'creator_id' => 'nullable|exists:creators,id',
       'ambassador_id' => 'nullable|exists:ambassadors,id',
