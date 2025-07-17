@@ -69,6 +69,16 @@ class Creator extends BaseModel
     return $this->hasMany(Project::class);
   }
 
+  public function invites(): HasMany
+  {
+    return $this->hasMany(ProjectInvite::class);
+  }
+
+  public function proposals(): HasMany
+  {
+    return $this->hasMany(ProjectProposal::class);
+  }
+
   /**
    * Validation rules for creating or updating a Creator.
    * If $id is provided, use 'sometimes|required' for update context.

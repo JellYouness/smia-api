@@ -73,7 +73,7 @@ class ProjectController extends CrudController
         return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
       }
 
-      $query = Project::where('client_id', $clientId);
+      $query = Project::withCount('proposals')->where('client_id', $clientId);
 
       $perPage = $request->input('per_page', 50);
       if ($perPage === 'all') {

@@ -6,6 +6,7 @@ use App\Enums\PROJECT_STATUS;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Validation\Rule;
 
 class Project extends Model
@@ -123,6 +124,16 @@ class Project extends Model
   public function ambassador(): BelongsTo
   {
     return $this->belongsTo(Ambassador::class);
+  }
+
+  public function invites(): HasMany
+  {
+    return $this->hasMany(ProjectInvite::class);
+  }
+
+  public function proposals(): HasMany
+  {
+    return $this->hasMany(ProjectProposal::class);
   }
 
   public static function rules($id = null): array
