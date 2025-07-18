@@ -10,6 +10,7 @@ use App\Http\Controllers\CreatorController;
 use App\Http\Controllers\AmbassadorController;
 use App\Http\Controllers\SystemAdministratorController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -215,6 +216,23 @@ Route::middleware('auth:api')->group(
                         Route::post('/{id}', 'updateOne');
                         Route::delete('/{id}', 'deleteOne');
                         Route::delete('/', 'deleteMulti');
+                    }
+                );
+            }
+        );
+
+        // Notifications routes
+        Route::prefix('notifications')->name('notifications.')->group(
+            function () {
+                Route::controller(NotificationController::class)->group(
+                    function () {
+                        Route::get('/', 'index');
+                        Route::get('/types', 'getNotificationTypes');
+                        Route::get('/unread-count', 'getUnreadCount');
+                        Route::get('/{id}', 'show');
+                        Route::patch('/{id}/read', 'markAsRead');
+                        Route::patch('/mark-all-read', 'markAllAsRead');
+                        Route::delete('/{id}', 'destroy');
                     }
                 );
             }

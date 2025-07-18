@@ -292,4 +292,29 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
     {
         return $this->hasMany(Session::class);
     }
+
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable');
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->notifications()->unread();
+    }
+
+    public function readNotifications()
+    {
+        return $this->notifications()->read();
+    }
+
+    public function markAllNotificationsAsRead()
+    {
+        return $this->unreadNotifications()->update(['read_at' => now()]);
+    }
+
+    public function getUnreadNotificationsCount()
+    {
+        return $this->unreadNotifications()->count();
+    }
 }
