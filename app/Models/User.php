@@ -47,6 +47,15 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
         'email_verified_at',
         'preferred_language',
         'timezone',
+        'language',
+        'notification_email',
+        'notification_sms',
+        'notification_push',
+        'notification_in_app',
+        'privacy',
+        'two_factor_secret',
+        'google_id',
+        'facebook_id',
     ];
 
     /**
@@ -75,6 +84,10 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
     {
         return [
             'email_verified_at' => 'datetime',
+            'notification_email' => 'boolean',
+            'notification_sms' => 'boolean',
+            'notification_push' => 'boolean',
+            'notification_in_app' => 'boolean',
         ];
     }
 
@@ -273,5 +286,10 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
     public function sendEmailVerificationNotification()
     {
         $this->notify(new \App\Notifications\EmailVerificationNotification);
+    }
+
+    public function sessions()
+    {
+        return $this->hasMany(Session::class);
     }
 }
