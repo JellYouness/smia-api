@@ -27,6 +27,7 @@ class Project extends Model
   protected $casts = [
     'start_date' => 'datetime',
     'end_date' => 'datetime',
+    'status' => PROJECT_STATUS::class,
   ];
 
   protected static function booted()

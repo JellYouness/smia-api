@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Ambassador;
 use App\Models\Creator;
 use App\Models\User;
+use App\Enums\PROJECT_STATUS;
 use Illuminate\Support\Facades\DB;
 
 class ProjectSeeder extends Seeder
@@ -23,7 +24,7 @@ class ProjectSeeder extends Seeder
         $project1 = Project::create([
             'title' => 'Client Project Example',
             'description' => 'A project created by a client with a linked creator.',
-            'status' => 'draft',
+            'status' => PROJECT_STATUS::DRAFT,
             'client_id' => $client?->id,
             'creator_id' => $creator?->id,
             'start_date' => now(),
@@ -46,7 +47,7 @@ class ProjectSeeder extends Seeder
         $project2 = Project::create([
             'title' => 'Ambassador Project Example',
             'description' => 'A project created by an ambassador with no creators yet.',
-            'status' => 'draft',
+            'status' => PROJECT_STATUS::DRAFT,
             'ambassador_id' => $ambassador?->id,
             'start_date' => now(),
             'end_date' => now()->addDays(30),
