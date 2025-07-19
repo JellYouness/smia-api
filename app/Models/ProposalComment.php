@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\Rule;
 
 class ProposalComment extends Model
 {
@@ -23,6 +24,11 @@ class ProposalComment extends Model
   protected $casts = [
     'attachments' => 'array',
     'read_at'     => 'datetime',
+  ];
+
+  protected $with = [
+    'user',
+    'children.user',
   ];
 
   public function proposal(): BelongsTo
@@ -51,10 +57,17 @@ class ProposalComment extends Model
     $required = $id ? 'sometimes|required' : 'required';
 
     return [
-      'proposal_id' => "$required|exists:project_proposals,id",
-      'user_id'     => "$required|exists:users,id",
-      'parent_id'   => 'nullable|exists:proposal_comments,id',
-      'body'        => "$required|string",
+      'proposal_id' => 'sometimes|exists:project_proposals,id',
+      'user_id'     => 'sometimes|exists:users,id',
+
+      'parent_id'   => [
+        'nullable',
+        Rule::exists('proposal_comments', 'id')
+          ->where('proposal_id', request()->route('proposalId'))
+          ->whereNull('parent_id'),
+      ],
+
+      'body'        => 'required|string',
       'attachments' => 'nullable|array',
       'read_at'     => 'nullable|date',
     ];
