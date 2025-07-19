@@ -137,6 +137,11 @@ class Project extends Model
     return $this->hasMany(ProjectProposal::class);
   }
 
+  public function creators(): HasMany
+  {
+    return $this->hasMany(ProjectCreator::class);
+  }
+
   public static function rules($id = null): array
   {
     $id = $id ?? request()->route('id');

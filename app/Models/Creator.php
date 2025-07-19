@@ -51,6 +51,9 @@ class Creator extends BaseModel
     'achievements' => 'array',
     'portfolio' => 'array',
     'equipment_info' => 'array',
+    'hourly_rate' => 'float',
+    'average_rating' => 'float',
+    'rating_count' => 'integer',
   ];
 
   /**

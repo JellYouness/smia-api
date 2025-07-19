@@ -6,6 +6,7 @@ use App\Models\Creator;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CreatorController extends CrudController
 {
@@ -76,5 +77,21 @@ class CreatorController extends CrudController
 
       return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
     }
+  }
+
+  protected function afterReadAll(LengthAwarePaginator $items)
+  {
+    $statusRank = [
+      'FEATURED'    => 4,
+      'VERIFIED'    => 3, 
+      'UNVERIFIED'  => 2,
+      'PENDING'     => 1,
+    ];
+
+    $items->setCollection(
+      collect($items->items())
+        ->sortByDesc(fn($c) => $statusRank[$c->verification_status] ?? 0)
+        ->values()
+    );
   }
 }
