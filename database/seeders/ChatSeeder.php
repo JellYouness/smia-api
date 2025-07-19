@@ -99,23 +99,23 @@ class ChatSeeder extends Seeder
     {
         $this->command->info('Creating project conversations...');
 
-        $projectNames = [
-            'Website Redesign',
-            'Mobile App Development',
-            'Brand Identity Project'
-        ];
+        // Get actual projects from the database
+        $projects = \App\Models\Project::all();
 
-        foreach ($projectNames as $index => $projectName) {
-            if ($index >= 2) break; // Limit to 2 project chats
+        if ($projects->isEmpty()) {
+            $this->command->warn('No projects found. Skipping project conversations.');
+            return;
+        }
 
+        foreach ($projects as $project) {
             // Select 2-4 random users for each project
             $participants = $users->random(rand(2, min(4, $users->count())))->all();
 
             $conversation = Conversation::create([
                 'id' => Str::uuid(),
                 'type' => 'project',
-                'name' => $projectName,
-                'project_id' => $index + 1, // Mock project ID
+                'name' => $project->title,
+                'project_id' => $project->id,
             ]);
 
             // Add participants
