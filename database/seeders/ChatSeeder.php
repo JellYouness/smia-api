@@ -141,7 +141,7 @@ class ChatSeeder extends Seeder
             $messageText = $sampleMessages[array_rand($sampleMessages)];
 
             // Add some variety to messages
-            $messageText = $this->personalizeMessage($messageText, $sender->firstName);
+            $messageText = $this->personalizeMessage($messageText, $sender->first_name);
 
             $message = Message::create([
                 'id' => Str::uuid(),

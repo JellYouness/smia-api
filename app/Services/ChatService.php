@@ -139,6 +139,9 @@ class ChatService
     public function markConversationAsRead(Conversation $conversation, User $user): void
     {
         $conversation->markAsReadForUser($user);
+
+        // Broadcast user-specific event for real-time unread count updates
+        broadcast(new \App\Events\MessageRead($conversation, $user));
     }
 
     public function addParticipantToConversation(Conversation $conversation, User $user, string $role = 'member'): void
@@ -211,18 +214,34 @@ class ChatService
             ->get();
 
         foreach ($participants as $participant) {
+            // Send notification
+            $notificationData = [
+                'conversation_id' => $conversation->id,
+                'conversation_name' => $conversation->name ?? 'Direct Message',
+                'sender_name' => $sender->firstName . ' ' . $sender->lastName,
+                'message_preview' => substr($message->content, 0, 100),
+                'message_id' => $message->id,
+            ];
+
+            // Debug: Log the notification data
+            \Log::info('Sending message notification', [
+                'participant_id' => $participant->id,
+                'sender_id' => $sender->id,
+                'sender_name' => $notificationData['sender_name'],
+                'sender_first_name' => $sender->firstName,
+                'sender_last_name' => $sender->lastName,
+                'sender_attributes' => $sender->getAttributes(),
+            ]);
+
             $this->notificationService->send(
                 $participant,
                 NotificationType::MESSAGE_RECEIVED,
-                [
-                    'conversation_id' => $conversation->id,
-                    'conversation_name' => $conversation->name ?? 'Direct Message',
-                    'sender_name' => $sender->firstName . ' ' . $sender->lastName,
-                    'message_preview' => substr($message->content, 0, 100),
-                    'message_id' => $message->id,
-                ],
+                $notificationData,
                 ['in_app', 'email']
             );
+
+            // Broadcast user-specific event for real-time unread count updates
+            broadcast(new \App\Events\MessageReceived($conversation, $message, $participant));
         }
     }
 
