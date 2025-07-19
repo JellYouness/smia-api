@@ -338,4 +338,15 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
             })
             ->count();
     }
+
+    // Accessor methods for firstName and lastName
+    public function getFirstNameAttribute()
+    {
+        return $this->attributes['first_name'] ?? '';
+    }
+
+    public function getLastNameAttribute()
+    {
+        return $this->attributes['last_name'] ?? '';
+    }
 }
