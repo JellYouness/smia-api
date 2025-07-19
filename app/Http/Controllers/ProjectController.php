@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PROJECT_INVITE_STATUS;
+use App\Enums\PROJECT_PROPOSAL_STATUS;
 use App\Models\Creator;
 use App\Models\Project;
 use App\Models\ProjectInvite;
+use App\Models\ProjectProposal;
+use App\Models\ProposalComment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Log;
@@ -235,6 +238,313 @@ class ProjectController extends CrudController
       Log::error($e->getTraceAsString());
 
       return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+    }
+  }
+
+  public function readAllInvitesByCreator(Request $request, $creatorId)
+  {
+    try {
+      $user = $request->user();
+      if (
+        ! $user->hasPermission('projects', 'read_invites') &&
+        ! $user->hasPermission('projects', 'read_own_invites')
+      ) {
+        return response()->json([
+          'success' => false,
+          'errors'  => [__('common.permission_denied')],
+        ]);
+      }
+
+      ProjectInvite::where('creator_id', $creatorId)
+        ->where('status', PROJECT_INVITE_STATUS::PENDING)
+        ->where('expires_at', '<', now())
+        ->update(['status' => PROJECT_INVITE_STATUS::EXPIRED]);
+
+      $query = ProjectInvite::with([
+        'project:id,title,budget,status,start_date,end_date,client_id',
+
+        'project.client:id,user_id,company_name,company_size,industry',
+
+        'project.client.user:id,first_name,last_name,profile_image',
+      ])
+        ->where('creator_id', $creatorId)
+        ->orderByDesc('created_at');
+
+      $perPage = $request->input('per_page', 50);
+
+      if ($perPage === 'all') {
+        $invites = $query->get();
+        $meta    = [
+          'current_page' => 1,
+          'last_page'    => 1,
+          'total_items'  => $invites->count(),
+        ];
+      } else {
+        $invites = $query->paginate($perPage);
+        $meta    = [
+          'current_page' => $invites->currentPage(),
+          'last_page'    => $invites->lastPage(),
+          'total_items'  => $invites->total(),
+        ];
+        $invites = $invites->items();
+      }
+
+      return response()->json([
+        'success' => true,
+        'data'    => [
+          'items' => $invites,
+          'meta'  => $meta,
+        ],
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('Error in ProjectController.readAllInvitesByCreator: ' . $e->getMessage());
+      Log::error($e->getTraceAsString());
+
+      return response()->json([
+        'success' => false,
+        'errors'  => [__('common.unexpected_error')],
+      ]);
+    }
+  }
+
+  public function declineInvite(Request $request, $id)
+  {
+    try {
+      $user   = $request->user();
+      $invite = ProjectInvite::with('creator.user')->find($id);
+
+      if (! $invite) {
+        return response()->json([
+          'success' => false,
+          'errors'  => [__('projects.invite_not_found')],
+        ]);
+      }
+
+      $isReceiver = $invite->creator && $invite->creator->user_id === $user->id;
+      if (! $isReceiver && ! $user->hasPermission('projects', 'manage_invites')) {
+        return response()->json([
+          'success' => false,
+          'errors'  => [__('common.permission_denied')],
+        ]);
+      }
+
+      if ($invite->status !== PROJECT_INVITE_STATUS::PENDING->value) {
+        return response()->json([
+          'success' => false,
+          'errors'  => [__('projects.invite_not_pending')],
+        ]);
+      }
+
+      $invite->update([
+        'status'      => PROJECT_INVITE_STATUS::DECLINED,
+        'declined_at' => now(),
+      ]);
+
+      return response()->json([
+        'success' => true,
+        'data'    => ['item' => $invite],
+        'message' => __('projects.invite_declined'),
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('Error in ProjectController.declineInvite: ' . $e->getMessage());
+      Log::error($e->getTraceAsString());
+
+      return response()->json([
+        'success' => false,
+        'errors'  => [__('common.unexpected_error')],
+      ]);
+    }
+  }
+
+  public function acceptInvite(Request $request, $id)
+  {
+    try {
+      $user   = $request->user();
+      $invite = ProjectInvite::with(['project', 'creator'])->find($id);
+
+      if (! $invite) {
+        return response()->json([
+          'success' => false,
+          'errors'  => [__('projects.invite_not_found')],
+        ]);
+      }
+
+      $isReceiver = $invite->creator && $invite->creator->user_id === $user->id;
+      if (! $isReceiver && ! $user->hasPermission('projects', 'manage_invites')) {
+        return response()->json([
+          'success' => false,
+          'errors'  => [__('common.permission_denied')],
+        ]);
+      }
+
+      if ($invite->status !== PROJECT_INVITE_STATUS::PENDING->value) {
+        return response()->json([
+          'success' => false,
+          'errors'  => [__('projects.invite_not_pending')],
+        ]);
+      }
+
+      $data = $request->only([
+        'amount',
+        'currency',
+        'duration_days',
+        'cover_letter',
+        'attachments',
+        'meta'
+      ]);
+
+      if (array_key_exists('currency', $data) && is_null($data['currency'])) {
+        $data['currency'] = 'USD';
+      }
+
+      $proposal = ProjectProposal::create([
+        'invite_id'     => $invite->id,
+        'project_id'    => $invite->project_id,
+        'creator_id'    => $invite->creator_id,
+        'status'        => PROJECT_PROPOSAL_STATUS::PENDING->value,
+        ...$data,
+      ]);
+
+      $invite->update([
+        'status'      => PROJECT_INVITE_STATUS::ACCEPTED,
+        'accepted_at' => now(),
+      ]);
+
+      return response()->json([
+        'success' => true,
+        'data'    => ['item' => $proposal],
+        'message' => __('projects.invite_accepted'),
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('Error in ProjectController.acceptInvite: ' . $e->getMessage());
+      Log::error($e->getTraceAsString());
+
+      return response()->json([
+        'success' => false,
+        'errors'  => [__('common.unexpected_error')],
+      ]);
+    }
+  }
+
+  public function readAllProposalsByCreator(Request $request, $creatorId)
+  {
+    try {
+      $user = $request->user();
+      if (
+        ! $user->hasPermission('projects', 'read_proposals') &&
+        ! $user->hasPermission('projects', 'read_own_proposals')
+      ) {
+        return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
+      }
+
+      $query = ProjectProposal::with([
+        'project:id,title,budget,status,start_date,end_date,client_id',
+        'project.client:id,user_id,company_name',
+        'project.client.user:id,first_name,last_name,profile_image',
+      ])->where('creator_id', $creatorId)
+        ->orderByDesc('created_at');
+
+      $perPage = $request->input('per_page', 50);
+      if ($perPage === 'all') {
+        $proposals = $query->get();
+        $meta = ['current_page' => 1, 'last_page' => 1, 'total_items' => $proposals->count()];
+      } else {
+        $proposals = $query->paginate($perPage);
+        $meta = [
+          'current_page' => $proposals->currentPage(),
+          'last_page' => $proposals->lastPage(),
+          'total_items' => $proposals->total(),
+        ];
+        $proposals = $proposals->items();
+      }
+
+      return response()->json([
+        'success' => true,
+        'data' => ['items' => $proposals, 'meta' => $meta],
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('readAllProposalsByCreator: ' . $e->getMessage());
+      return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+    }
+  }
+
+  public function addCommentToProposal(Request $request, $proposalId)
+  {
+    try {
+      $user      = $request->user();
+      $proposal  = ProjectProposal::with(['creator.user', 'project.client.user'])->findOrFail($proposalId);
+
+      $isCreator = $proposal->creator?->user_id === $user->id;
+      $isClient  = $proposal->project?->client?->user_id === $user->id;
+
+      if (! ($isCreator || $isClient || $user->hasPermission('projects', 'manage_comments'))) {
+        return response()->json([
+          'success' => false,
+          'errors'  => [__('common.permission_denied')]
+        ]);
+      }
+
+      $data = $request->validate(ProposalComment::rules());
+
+      if ($data['parent_id'] ?? false) {
+        $parent = ProposalComment::where('proposal_id', $proposalId)
+          ->whereNull('parent_id')
+          ->findOrFail($data['parent_id']);
+      }
+
+      $comment = ProposalComment::create([
+        'proposal_id' => $proposalId,
+        'user_id'     => $user->id,
+        'parent_id'   => $data['parent_id'] ?? null,
+        'body'        => $data['body'],
+        'attachments' => $data['attachments'] ?? null,
+      ]);
+
+      return response()->json([
+        'success' => true,
+        'data'    => ['item' => $comment]
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('addCommentToProposal: ' . $e->getMessage());
+      return response()->json([
+        'success' => false,
+        'errors'  => [__('common.unexpected_error')],
+      ]);
+    }
+  }
+
+  public function readAllCommentsByProposal(Request $request, $proposalId)
+  {
+    try {
+      $user = $request->user();
+
+      $proposal = ProjectProposal::findOrFail($proposalId);
+
+      $isCreator = $proposal->creator?->user_id === $user->id;
+      $isClient  = $proposal->project?->client?->user_id === $user->id;
+
+      if (! ($isCreator || $isClient || $user->hasPermission('projects', 'manage_comments'))) {
+        return response()->json([
+          'success' => false,
+          'errors'  => [__('common.permission_denied')],
+        ]);
+      }
+
+      $comments = ProposalComment::where('proposal_id', $proposalId)
+        ->whereNull('parent_id')
+        ->orderBy('created_at')
+        ->get();
+
+      return response()->json([
+        'success' => true,
+        'data'    => ['items' => $comments],
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('readAllCommentsByProposal: ' . $e->getMessage());
+      return response()->json([
+        'success' => false,
+        'errors'  => [__('common.unexpected_error')],
+      ]);
     }
   }
 }

@@ -32,6 +32,10 @@ class ProjectProposal extends Model
     'amount'      => 'decimal:2',
   ];
 
+  protected $with = [
+    'comments',
+  ];
+
   public function invite(): BelongsTo
   {
     return $this->belongsTo(ProjectInvite::class, 'invite_id');
