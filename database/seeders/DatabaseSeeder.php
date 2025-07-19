@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
       CrudPermissionSeeder::class,
       AdminPermissionSeeder::class,
       SuperAdminPermissionSeeder::class,
+      ChatSeeder::class,
     ]);
   }
 }

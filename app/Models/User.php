@@ -317,4 +317,25 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
     {
         return $this->unreadNotifications()->count();
     }
+
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot(['role', 'joined_at', 'last_read_at'])
+            ->withTimestamps();
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function getUnreadConversationsCount(): int
+    {
+        return $this->conversations()
+            ->whereHas('messages', function ($query) {
+                $query->where('created_at', '>', \DB::raw('conversation_participants.last_read_at'));
+            })
+            ->count();
+    }
 }

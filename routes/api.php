@@ -62,6 +62,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/connected-accounts', [\App\Http\Controllers\ConnectedAccountController::class, 'index']);
     Route::post('/user/connected-accounts/{provider}/disconnect', [\App\Http\Controllers\ConnectedAccountController::class, 'disconnect']);
     Route::get('/user/connected-accounts/{provider}/connect', [\App\Http\Controllers\ConnectedAccountController::class, 'redirectToProvider']);
+
+    // Chat routes
+    Route::prefix('chat')->group(function () {
+        Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'getConversations']);
+        Route::post('/conversations/direct', [\App\Http\Controllers\ChatController::class, 'createDirectConversation']);
+        Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroupConversation']);
+        Route::get('/conversations/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'getMessages']);
+        Route::post('/conversations/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
+        Route::put('/conversations/{conversationId}/read', [\App\Http\Controllers\ChatController::class, 'markAsRead']);
+        Route::put('/messages/{messageId}', [\App\Http\Controllers\ChatController::class, 'editMessage']);
+        Route::delete('/messages/{messageId}', [\App\Http\Controllers\ChatController::class, 'deleteMessage']);
+    });
 });
 
 Route::middleware('auth:api')->group(
