@@ -201,6 +201,8 @@ Route::middleware('auth:api')->group(
                         Route::get('/creator/{creatorId}', 'readAllByCreator');
                         Route::get('/client/{clientId}', 'readAllByClient');
                         Route::get('/ambassador/{ambassadorId}', 'readAllByAmbassador');
+
+                        Route::post('/invite-creator', 'inviteCreator');
                     }
                 );
             }
