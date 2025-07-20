@@ -10,6 +10,7 @@ use App\Http\Controllers\CreatorController;
 use App\Http\Controllers\AmbassadorController;
 use App\Http\Controllers\SystemAdministratorController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectUpdateController;
 use App\Http\Controllers\NotificationController;
 
 /*
@@ -220,8 +221,12 @@ Route::middleware('auth:api')->group(
             Route::post('/invites/{id}/accept', 'acceptInvite');
 
             Route::get('/proposals/creator/{creatorId}', 'readAllProposalsByCreator');
+            Route::get('/proposals/project/{projectId}', 'readAllProposalsByProject');
             Route::post('/proposals/{proposalId}/comments', 'addCommentToProposal');
             Route::get('/proposals/{proposalId}/comments', 'readAllCommentsByProposal');
+            Route::patch('/proposals/{proposalId}/approve', 'approveProposal');
+            Route::patch('/proposals/{proposalId}/decline', 'declineProposal');
+            Route::patch('/{id}/creators/{creatorId}/permission', 'updateCreatorPermission');
           }
         );
       }
@@ -237,6 +242,22 @@ Route::middleware('auth:api')->group(
             Route::post('/{id}', 'updateOne');
             Route::delete('/{id}', 'deleteOne');
             Route::delete('/', 'deleteMulti');
+          }
+        );
+      }
+    );
+
+    // Project Updates routes
+    Route::prefix('project-updates')->name('project-updates.')->group(
+      function () {
+        Route::controller(ProjectUpdateController::class)->group(
+          function () {
+            Route::post('/', 'createOne');
+            Route::get('/{id}', 'readOne');
+            Route::get('/', 'readAll');
+            Route::put('/{id}', 'updateOne');
+            Route::patch('/{id}', 'patchOne');
+            Route::delete('/{id}', 'deleteOne');
           }
         );
       }

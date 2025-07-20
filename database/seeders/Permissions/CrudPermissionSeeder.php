@@ -22,14 +22,33 @@ class CrudPermissionSeeder extends Seeder
    */
   public function run()
   {
-    $this->aclService->createScopePermissions('projects', ['create', 'read', 'read_own', 'update', 'delete', 'invite_creator', 'read_invites', 'read_own_invites', 'manage_invites', 'read_proposals', 'read_own_proposals', 'manage_comments']);
+    $this->aclService->createScopePermissions('projects', [
+      'create',
+      'read',
+      'read_own',
+      'update',
+      'delete',
+      'invite_creator',
+      'read_invites',
+      'read_own_invites',
+      'manage_invites',
+      'read_proposals',
+      'read_own_proposals',
+      'manage_proposals',
+      'manage_comments',
+    ]);
+
+    $this->aclService->createScopePermissions('project_updates', ['create', 'read', 'read_own', 'update', 'delete',]);
+
     $this->aclService->createScopePermissions('creators', ['create', 'read', 'read_own', 'update', 'delete']);
 
     $creatorRole = Role::where('name', ROLE_ENUM::CREATOR)->first();
     $this->aclService->assignScopePermissionsToRole($creatorRole, 'projects', ['read_own', 'read_own_invites', 'manage_invites', 'read_own_proposals', 'manage_comments']);
+    $this->aclService->assignScopePermissionsToRole($creatorRole, 'project_updates', ['read_own']);
 
     $clientRole = Role::where('name', ROLE_ENUM::CLIENT)->first();
-    $this->aclService->assignScopePermissionsToRole($clientRole, 'projects', ['create', 'read_own', 'update', 'delete', 'invite_creator', 'read_own_proposals', 'manage_comments']);
+    $this->aclService->assignScopePermissionsToRole($clientRole, 'projects', ['create', 'read_own', 'update', 'delete', 'invite_creator', 'read_own_proposals', 'manage_proposals', 'manage_comments']);
+    $this->aclService->assignScopePermissionsToRole($clientRole, 'project_updates', ['create', 'read_own', 'read_own']);
     $this->aclService->assignScopePermissionsToRole($clientRole, 'creators', ['read']);
 
     $ambassadorRole = Role::where('name', ROLE_ENUM::AMBASSADOR)->first();

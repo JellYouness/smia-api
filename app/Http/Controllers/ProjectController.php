@@ -6,6 +6,7 @@ use App\Enums\PROJECT_INVITE_STATUS;
 use App\Enums\PROJECT_PROPOSAL_STATUS;
 use App\Models\Creator;
 use App\Models\Project;
+use App\Models\ProjectCreator;
 use App\Models\ProjectInvite;
 use App\Models\ProjectProposal;
 use App\Models\ProposalComment;
@@ -34,9 +35,10 @@ class ProjectController extends CrudController
   {
     $proposalsCount = $project->proposals()->count();
 
-    $hiredCreatorIds = $project->creators()
-      ->pluck('creator_id')
-      ->toArray();
+    // Load project creators with their creator and user relationships
+    $projectCreators = $project->creators()->with(['creator.user'])->get();
+    
+    $hiredCreatorIds = $projectCreators->pluck('creator_id')->toArray();
 
     if ($project->creator_id) {
       $hiredCreatorIds[] = $project->creator_id;
@@ -52,6 +54,7 @@ class ProjectController extends CrudController
     $project->setAttribute('invited_creator_ids', $invitedCreatorIds);
     $project->setAttribute('proposals_count', $proposalsCount);
     $project->setAttribute('hires_count', $hiresCount);
+    $project->setAttribute('project_creators', $projectCreators);
   }
 
   public function readAllByCreator(Request $request, $creatorId)
@@ -468,6 +471,49 @@ class ProjectController extends CrudController
     }
   }
 
+  public function readAllProposalsByProject(Request $request, $projectId)
+  {
+    try {
+      $user = $request->user();
+      if (
+        ! $user->hasPermission('projects', 'read_proposals') &&
+        ! $user->hasPermission('projects', 'read_own_proposals')
+      ) {
+        return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
+      }
+
+      $query = ProjectProposal::with([
+        'creator:id,user_id',
+        'creator.user:id,first_name,last_name,profile_image',
+
+        'project:id,title,budget,status,start_date,end_date,creator_id',
+      ])->where('project_id', $projectId)
+        ->orderByDesc('created_at');
+
+      $perPage = $request->input('per_page', 50);
+      if ($perPage === 'all') {
+        $proposals = $query->get();
+        $meta = ['current_page' => 1, 'last_page' => 1, 'total_items' => $proposals->count()];
+      } else {
+        $proposals = $query->paginate($perPage);
+        $meta = [
+          'current_page' => $proposals->currentPage(),
+          'last_page' => $proposals->lastPage(),
+          'total_items' => $proposals->total(),
+        ];
+        $proposals = $proposals->items();
+      }
+
+      return response()->json([
+        'success' => true,
+        'data' => ['items' => $proposals, 'meta' => $meta],
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('readAllProposalsByProject: ' . $e->getMessage());
+      return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+    }
+  }
+
   public function addCommentToProposal(Request $request, $proposalId)
   {
     try {
@@ -545,6 +591,111 @@ class ProjectController extends CrudController
         'success' => false,
         'errors'  => [__('common.unexpected_error')],
       ]);
+    }
+  }
+
+  public function approveProposal(Request $request, $proposalId)
+  {
+    try {
+      $user = $request->user();
+      $proposal = ProjectProposal::with(['creator', 'project'])->findOrFail($proposalId);
+
+      $isClient = $proposal->project?->client?->user_id === $user->id;
+
+      if (!$isClient && !$user->hasPermission('projects', 'manage_proposals')) {
+        return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
+      }
+
+      if ($proposal->status !== PROJECT_PROPOSAL_STATUS::PENDING->value) {
+        return response()->json(['success' => false, 'errors' => [__('projects.proposal_not_pending')]]);
+      }
+
+      $proposal->update(['status' => PROJECT_PROPOSAL_STATUS::ACCEPTED]);
+
+      ProjectCreator::create([
+        'project_id' => $proposal->project_id,
+        'creator_id' => $proposal->creator_id,
+        'role'       => null,
+        'status'     => 'ACTIVE',
+        'permission' => 'editor',
+      ]);
+
+      return response()->json([
+        'success' => true,
+        'data'    => ['item' => $proposal],
+        'message' => __('projects.proposal_approved'),
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('approveProposal: ' . $e->getMessage());
+      return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+    }
+  }
+
+  public function declineProposal(Request $request, $proposalId)
+  {
+    try {
+      $user = $request->user();
+      $proposal = ProjectProposal::with('project.client.user')->findOrFail($proposalId);
+
+      $isClient = $proposal->project?->client?->user_id === $user->id;
+
+      if (!$isClient && !$user->hasPermission('projects', 'manage_proposals')) {
+        return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
+      }
+
+      if ($proposal->status !== PROJECT_PROPOSAL_STATUS::PENDING->value) {
+        return response()->json(['success' => false, 'errors' => [__('projects.proposal_not_pending')]]);
+      }
+
+      $proposal->update(['status' => PROJECT_PROPOSAL_STATUS::REJECTED]);
+
+      return response()->json([
+        'success' => true,
+        'data'    => ['item' => $proposal],
+        'message' => __('projects.proposal_declined'),
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('declineProposal: ' . $e->getMessage());
+      return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+    }
+  }
+
+  public function updateCreatorPermission(Request $request, $projectId, $creatorId)
+  {
+    try {
+      $user = $request->user();
+      $project = Project::findOrFail($projectId);
+
+      // Check if user has permission to manage this project
+      $isClient = $project->client?->user_id === $user->id;
+      $isAmbassador = $project->ambassador?->user_id === $user->id;
+
+      if (!$isClient && !$isAmbassador && !$user->hasPermission('projects', 'manage_creators')) {
+        return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
+      }
+
+      $validated = $request->validate([
+        'permission' => 'required|in:viewer,editor',
+      ]);
+
+      $projectCreator = ProjectCreator::where('project_id', $projectId)
+        ->where('creator_id', $creatorId)
+        ->first();
+
+      if (!$projectCreator) {
+        return response()->json(['success' => false, 'errors' => [__('projects.creator_not_found')]]);
+      }
+
+      $projectCreator->update(['permission' => $validated['permission']]);
+
+      return response()->json([
+        'success' => true,
+        'data' => ['item' => $projectCreator],
+        'message' => __('projects.creator_permission_updated'),
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('updateCreatorPermission: ' . $e->getMessage());
+      return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
     }
   }
 }
