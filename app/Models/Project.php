@@ -31,6 +31,11 @@ class Project extends Model
     'status' => PROJECT_STATUS::class,
   ];
 
+  protected $with = [
+    'client.user',
+    'ambassador.user',
+  ];
+
   protected static function booted()
   {
     parent::booted();
