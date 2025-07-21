@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Enums\CREATOR_PROJECT_PERMISSION;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Validation\Rule;
 
 class ProjectCreator extends Model
 {
   use HasFactory;
 
-  protected $fillable = ['project_id', 'creator_id', 'role', 'status'];
+  protected $fillable = ['project_id', 'creator_id', 'role', 'status', 'permission'];
 
   public function project(): BelongsTo
   {
@@ -31,6 +33,7 @@ class ProjectCreator extends Model
       'creator_id' => "$required|exists:creators,id",
       'role' => 'nullable|string',
       'status' => 'nullable|string',
+      'permission' => ['nullable', 'string', Rule::in(array_column(CREATOR_PROJECT_PERMISSION::cases(), 'value'))],
     ];
   }
 }
