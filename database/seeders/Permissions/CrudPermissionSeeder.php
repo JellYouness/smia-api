@@ -37,9 +37,7 @@ class CrudPermissionSeeder extends Seeder
       'manage_proposals',
       'manage_comments',
     ]);
-
     $this->aclService->createScopePermissions('project_updates', ['create', 'read', 'read_own', 'update', 'delete',]);
-
     $this->aclService->createScopePermissions('creators', ['create', 'read', 'read_own', 'update', 'delete']);
 
     $creatorRole = Role::where('name', ROLE_ENUM::CREATOR)->first();
