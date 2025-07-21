@@ -143,11 +143,13 @@ Route::middleware('auth:api')->group(
         Route::controller(CreatorController::class)->group(
           function () {
             Route::post('/', 'createOne');
-            Route::get('/{id}', 'readOne');
             Route::get('/', 'readAll');
+            Route::get('/pending-applications', 'getPendingApplications');
+            Route::get('/{id}', 'readOne');
             Route::put('/{id}', 'updateOne');
             Route::patch('/{id}', 'patchOne');
             Route::delete('/{id}', 'deleteOne');
+            Route::patch('/{id}/application-status', 'updateApplicationStatus');
           }
         );
       }
@@ -175,11 +177,13 @@ Route::middleware('auth:api')->group(
         Route::controller(AmbassadorController::class)->group(
           function () {
             Route::post('/', 'createOne');
-            Route::get('/{id}', 'readOne');
             Route::get('/', 'readAll');
+            Route::get('/pending-applications', 'getPendingApplications');
+            Route::get('/{id}', 'readOne');
             Route::put('/{id}', 'updateOne');
             Route::patch('/{id}', 'patchOne');
             Route::delete('/{id}', 'deleteOne');
+            Route::patch('/{id}/application-status', 'updateApplicationStatus');
           }
         );
       }

@@ -16,6 +16,10 @@ enum NotificationType: string
     case PAYMENT_RECEIVED = 'payment_received';
     case PAYMENT_SENT = 'payment_sent';
     case ACCOUNT_VERIFIED = 'account_verified';
+    case APPLICATION_SUBMITTED = 'application_submitted';
+    case APPLICATION_APPROVED = 'application_approved';
+    case APPLICATION_REJECTED = 'application_rejected';
+    case APPLICATION_PENDING = 'application_pending';
     case WELCOME = 'welcome';
     case REMINDER = 'reminder';
     case SECURITY_ALERT = 'security_alert';

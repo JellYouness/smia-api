@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Notification;
+use Illuminate\Notifications\DatabaseNotification;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

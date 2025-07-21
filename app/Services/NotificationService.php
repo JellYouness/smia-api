@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\NotificationType;
-use App\Models\Notification;
+use Illuminate\Notifications\DatabaseNotification;
 use App\Models\User;
 use App\Notifications\InAppNotification;
 use Illuminate\Support\Str;
@@ -50,7 +50,7 @@ class NotificationService
 
     private function createInAppNotification(User $user, NotificationType $type, array $data): void
     {
-        Notification::create([
+        DatabaseNotification::create([
             'id' => Str::uuid(),
             'type' => $type,
             'notifiable_type' => User::class,
@@ -91,6 +91,10 @@ class NotificationService
             NotificationType::PAYMENT_RECEIVED => 'Payment Received',
             NotificationType::PAYMENT_SENT => 'Payment Sent',
             NotificationType::ACCOUNT_VERIFIED => 'Account Verified',
+            NotificationType::APPLICATION_SUBMITTED => 'Application Submitted',
+            NotificationType::APPLICATION_APPROVED => 'Application Approved',
+            NotificationType::APPLICATION_REJECTED => 'Application Update',
+            NotificationType::APPLICATION_PENDING => 'Application Status Update',
             NotificationType::WELCOME => 'Welcome',
             NotificationType::REMINDER => 'Reminder',
             NotificationType::SECURITY_ALERT => 'Security Alert',
@@ -112,6 +116,10 @@ class NotificationService
             NotificationType::PAYMENT_RECEIVED => 'payment',
             NotificationType::PAYMENT_SENT => 'send',
             NotificationType::ACCOUNT_VERIFIED => 'verified',
+            NotificationType::APPLICATION_SUBMITTED => 'description',
+            NotificationType::APPLICATION_APPROVED => 'check_circle',
+            NotificationType::APPLICATION_REJECTED => 'cancel',
+            NotificationType::APPLICATION_PENDING => 'schedule',
             NotificationType::WELCOME => 'celebration',
             NotificationType::REMINDER => 'schedule',
             NotificationType::SECURITY_ALERT => 'security',

@@ -26,7 +26,6 @@ class Notification extends Model
     protected $casts = [
         'data' => 'array',
         'read_at' => 'datetime',
-        'type' => NotificationType::class,
     ];
 
     public function notifiable(): MorphTo
@@ -64,8 +63,11 @@ class Notification extends Model
         return $query->whereNotNull('read_at');
     }
 
-    public function scopeOfType($query, NotificationType $type)
+    public function scopeOfType($query, $type)
     {
+        if ($type instanceof NotificationType) {
+            return $query->where('type', $type->value);
+        }
         return $query->where('type', $type);
     }
 }

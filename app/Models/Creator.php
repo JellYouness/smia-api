@@ -31,6 +31,9 @@ class Creator extends BaseModel
     'education',
     'professional_background',
     'achievements',
+    'review_notes',
+    'reviewed_at',
+    'reviewed_by',
   ];
 
   protected $casts = [

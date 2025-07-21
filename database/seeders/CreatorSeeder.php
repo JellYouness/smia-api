@@ -19,12 +19,12 @@ class CreatorSeeder extends Seeder
         foreach ($creators as $creator) {
             Creator::create([
                 'user_id' => $creator->id,
-                'skills' => json_encode([
+                'skills' => [
                     fake()->randomElement(['PHOTOGRAPHY', 'VIDEOGRAPHY', 'GRAPHIC_DESIGN', 'ANIMATION', 'AUDIO_PRODUCTION']),
                     fake()->randomElement(['PHOTOGRAPHY', 'VIDEOGRAPHY', 'GRAPHIC_DESIGN', 'ANIMATION', 'AUDIO_PRODUCTION'])
-                ]),
+                ],
                 'verification_status' => fake()->randomElement(['UNVERIFIED', 'PENDING', 'VERIFIED', 'FEATURED']),
-                'portfolio' => json_encode([
+                'portfolio' => [
                     [
                         'title' => fake()->sentence(),
                         'description' => fake()->paragraph(),
@@ -35,13 +35,13 @@ class CreatorSeeder extends Seeder
                         'description' => fake()->paragraph(),
                         'url' => fake()->url()
                     ]
-                ]),
+                ],
                 'experience' => fake()->numberBetween(1, 20),
                 'hourly_rate' => fake()->randomFloat(2, 20, 200),
                 'availability' => fake()->randomElement(['AVAILABLE', 'LIMITED', 'UNAVAILABLE', 'BUSY']),
                 'average_rating' => fake()->randomFloat(1, 1, 5),
                 'rating_count' => fake()->numberBetween(0, 100),
-                'regional_expertise' => json_encode([
+                'regional_expertise' => [
                     [
                         'region' => fake()->country(),
                         'expertise_level' => fake()->randomElement(['BEGINNER', 'INTERMEDIATE', 'EXPERT'])
@@ -50,8 +50,8 @@ class CreatorSeeder extends Seeder
                         'region' => fake()->country(),
                         'expertise_level' => fake()->randomElement(['BEGINNER', 'INTERMEDIATE', 'EXPERT'])
                     ]
-                ]),
-                'languages' => json_encode([
+                ],
+                'languages' => [
                     [
                         'language' => fake()->randomElement(['ENGLISH', 'FRENCH', 'SPANISH', 'GERMAN', 'ITALIAN']),
                         'proficiency' => fake()->randomElement(['BASIC', 'INTERMEDIATE', 'FLUENT', 'NATIVE'])
@@ -60,45 +60,45 @@ class CreatorSeeder extends Seeder
                         'language' => fake()->randomElement(['ENGLISH', 'FRENCH', 'SPANISH', 'GERMAN', 'ITALIAN']),
                         'proficiency' => fake()->randomElement(['BASIC', 'INTERMEDIATE', 'FLUENT', 'NATIVE'])
                     ]
-                ]),
+                ],
                 'is_journalist' => fake()->boolean(),
-                'media_types' => json_encode([
+                'media_types' => [
                     fake()->randomElement(['PHOTO', 'VIDEO', 'ARTICLE', 'AUDIO', 'DESIGN', 'OTHER']),
                     fake()->randomElement(['PHOTO', 'VIDEO', 'ARTICLE', 'AUDIO', 'DESIGN', 'OTHER'])
-                ]),
-                'certifications' => json_encode([
+                ],
+                'certifications' => [
                     [
                         'title' => fake()->sentence(),
                         'issuer' => fake()->company(),
                         'date' => fake()->date()
                     ]
-                ]),
-                'equipment_info' => json_encode([
+                ],
+                'equipment_info' => [
                     'cameras' => [fake()->word(), fake()->word()],
                     'lenses' => [fake()->word(), fake()->word()],
                     'audio' => [fake()->word()],
                     'lighting' => [fake()->word(), fake()->word()]
-                ]),
-                'education' => json_encode([
+                ],
+                'education' => [
                     [
                         'degree' => fake()->randomElement(['Bachelor', 'Master', 'PhD']),
                         'field' => fake()->jobTitle(),
                         'institution' => fake()->company(),
                         'year' => fake()->year()
                     ]
-                ]),
-                'professional_background' => json_encode([
+                ],
+                'professional_background' => [
                     [
                         'title' => fake()->jobTitle(),
                         'company' => fake()->company(),
                         'duration' => fake()->numberBetween(1, 10) . ' years',
                         'description' => fake()->paragraph()
                     ]
-                ]),
-                'achievements' => json_encode([
+                ],
+                'achievements' => [
                     fake()->sentence(),
                     fake()->sentence()
-                ])
+                ]
             ]);
         }
     }
