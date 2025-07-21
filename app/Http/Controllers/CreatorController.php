@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\ApplicationStatusNotification;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 
 class CreatorController extends CrudController
 {
@@ -33,7 +34,63 @@ class CreatorController extends CrudController
 
     protected function getReadAllQuery(): Builder
     {
-        return $this->model()->with('user');
+        return $this->model()->with('user.profile');
+    }
+
+    public function readAll(Request $request)
+    {
+        $query = $this->getReadAllQuery();
+        $filters = $request->input('filters', []);
+        $perPage = $request->input('per_page', 50);
+
+        // Custom filters
+        foreach ($filters as $filter) {
+            $filter = is_string($filter) ? json_decode($filter, true) : $filter;
+            if (isset($filter['filterColumn'], $filter['filterOperator'], $filter['filterValue'])) {
+                if ($filter['filterColumn'] === 'skills' && $filter['filterOperator'] === 'contains') {
+                    $query->whereJsonContains('skills', $filter['filterValue']);
+                } elseif ($filter['filterColumn'] === 'average_rating' && $filter['filterOperator'] === 'gte') {
+                    $query->where('average_rating', '>=', $filter['filterValue']);
+                } elseif ($filter['filterColumn'] === 'availability' && $filter['filterOperator'] === 'equals') {
+                    $query->where('availability', $filter['filterValue']);
+                } elseif ($filter['filterColumn'] === 'search' && $filter['filterOperator'] === 'contains') {
+                    $search = $filter['filterValue'];
+                    $query->where(function ($q) use ($search) {
+                        // Search in related user fields
+                        $q->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('first_name', 'like', "%$search%")
+                                ->orWhere('last_name', 'like', "%$search%")
+                                ->orWhere('email', 'like', "%$search%")
+                                ->orWhere('username', 'like', "%$search%")
+                            ;
+                        });
+                        // Search in related user profile bio
+                        $q->orWhereHas('user.profile', function ($pq) use ($search) {
+                            $pq->where('bio', 'like', "%$search%");
+                        });
+                        // Optionally, search in portfolio if it's a JSON/text column
+                        if (Schema::hasColumn('creators', 'portfolio')) {
+                            $q->orWhere('portfolio', 'like', "%$search%");
+                        }
+                    });
+                }
+                // Add more custom filters as needed
+            }
+        }
+
+        $items = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'items' => $items->items(),
+                'meta' => [
+                    'current_page' => $items->currentPage(),
+                    'last_page' => $items->lastPage(),
+                    'total_items' => $items->total(),
+                ],
+            ],
+        ]);
     }
 
     public function readOne($id, Request $request)
