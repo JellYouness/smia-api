@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\CREATOR_PROJECT_PERMISSION;
 use Illuminate\Database\Seeder;
 use App\Models\Project;
 use App\Models\Client;
@@ -36,7 +37,7 @@ class ProjectSeeder extends Seeder
             DB::table('project_creators')->insert([
                 'project_id' => $project1->id,
                 'creator_id' => $creator->id,
-                'role' => 'editor',
+                'permission' => CREATOR_PROJECT_PERMISSION::EDITOR,
                 'status' => 'assigned',
                 'created_at' => now(),
                 'updated_at' => now(),

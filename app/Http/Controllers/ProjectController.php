@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CREATOR_PROJECT_PERMISSION;
 use App\Enums\PROJECT_INVITE_STATUS;
 use App\Enums\PROJECT_PROPOSAL_STATUS;
 use App\Models\Creator;
@@ -37,7 +38,7 @@ class ProjectController extends CrudController
 
     // Load project creators with their creator and user relationships
     $projectCreators = $project->creators()->with(['creator.user'])->get();
-    
+
     $hiredCreatorIds = $projectCreators->pluck('creator_id')->toArray();
 
     if ($project->creator_id) {
@@ -617,7 +618,7 @@ class ProjectController extends CrudController
         'creator_id' => $proposal->creator_id,
         'role'       => null,
         'status'     => 'ACTIVE',
-        'permission' => 'editor',
+        'permission' => CREATOR_PROJECT_PERMISSION::EDITOR,
       ]);
 
       return response()->json([
@@ -675,7 +676,7 @@ class ProjectController extends CrudController
       }
 
       $validated = $request->validate([
-        'permission' => 'required|in:viewer,editor',
+        'permission' => 'required|in:' . implode(',', array_column(CREATOR_PROJECT_PERMISSION::cases(), 'value')),
       ]);
 
       $projectCreator = ProjectCreator::where('project_id', $projectId)
