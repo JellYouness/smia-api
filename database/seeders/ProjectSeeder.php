@@ -31,6 +31,7 @@ class ProjectSeeder extends Seeder
             'start_date' => now(),
             'end_date' => now()->addDays(30),
             'budget' => 1000.00,
+            'is_public' => true,
         ]);
         if ($project1 && $creator) {
             // Attach the creator to the project_creators table
@@ -53,6 +54,7 @@ class ProjectSeeder extends Seeder
             'start_date' => now(),
             'end_date' => now()->addDays(30),
             'budget' => 2000.00,
+            'is_public' => true,
         ]);
     }
 }

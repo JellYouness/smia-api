@@ -77,6 +77,9 @@ Route::middleware('auth:sanctum')->group(function () {
   });
 });
 
+// Public projects route (no auth required)
+Route::get('projects/public', [\App\Http\Controllers\ProjectController::class, 'readAllPublicProjects']);
+
 Route::middleware('auth:api')->group(
   function () {
     Route::prefix('auth')->name('auth.')->group(
