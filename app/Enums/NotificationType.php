@@ -23,4 +23,9 @@ enum NotificationType: string
     case WELCOME = 'welcome';
     case REMINDER = 'reminder';
     case SECURITY_ALERT = 'security_alert';
+    case PROJECT_PERMISSION_UPDATED = 'project_permission_updated';
+    case NEW_PROJECT_INVITE = 'new_project_invite';
+    case NEW_PROPOSAL = 'new_proposal';
+    case NEW_PROPOSAL_COMMENT = 'new_proposal_comment';
+    case NEW_PROJECT_UPDATE = 'new_project_update';
 }

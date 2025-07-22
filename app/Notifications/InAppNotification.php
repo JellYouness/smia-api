@@ -27,9 +27,74 @@ class InAppNotification extends Notification implements ShouldQueue
         $title = $this->getTitle();
         $message = $this->getMessage();
 
-        return (new MailMessage)
-            ->subject($title)
-            ->line($message)
+        $mailMessage = (new MailMessage)
+            ->subject($title);
+
+        if ($this->type === NotificationType::NEW_PROJECT_UPDATE) {
+            $projectTitle = $this->data['project_title'] ?? null;
+            $updateType = $this->data['update_type'] ?? null;
+            $updateBody = $this->data['update_body'] ?? null;
+            if ($projectTitle) {
+                $mailMessage->line('Project: ' . $projectTitle);
+            }
+            if ($updateType) {
+                $mailMessage->line('Update Type: ' . $updateType);
+            }
+            if ($updateBody) {
+                $mailMessage->line('Update Details:');
+                $mailMessage->line($updateBody);
+            }
+        } else if ($this->type === NotificationType::NEW_PROJECT_INVITE) {
+            $projectTitle = $this->data['project_title'] ?? null;
+            $inviteMessage = $this->data['message'] ?? null;
+            $mailMessage->line('You have been invited to join a new project.');
+            if ($projectTitle) {
+                $mailMessage->line('Project: ' . $projectTitle);
+            }
+            if ($inviteMessage) {
+                $mailMessage->line('Invitation Message:');
+                $mailMessage->line($inviteMessage);
+            }
+        } else if ($this->type === NotificationType::NEW_PROPOSAL) {
+            $projectTitle = $this->data['project_title'] ?? null;
+            $proposalId = $this->data['proposal_id'] ?? null;
+            $mailMessage->line('You have received a new proposal.');
+            if ($projectTitle) {
+                $mailMessage->line('Project: ' . $projectTitle);
+            }
+            if ($proposalId) {
+                $mailMessage->line('Proposal ID: ' . $proposalId);
+            }
+        } else if ($this->type === NotificationType::NEW_PROPOSAL_COMMENT) {
+            $projectTitle = $this->data['project_title'] ?? null;
+            $proposalId = $this->data['proposal_id'] ?? null;
+            $commentBody = $this->data['comment_body'] ?? null;
+            $mailMessage->line('There is a new comment on your proposal.');
+            if ($projectTitle) {
+                $mailMessage->line('Project: ' . $projectTitle);
+            }
+            if ($proposalId) {
+                $mailMessage->line('Proposal ID: ' . $proposalId);
+            }
+            if ($commentBody) {
+                $mailMessage->line('Comment:');
+                $mailMessage->line($commentBody);
+            }
+        } else if ($this->type === NotificationType::PROJECT_PERMISSION_UPDATED) {
+            $project = $this->data['project_title'] ?? $this->data['project_id'] ?? '';
+            $permission = $this->data['permission'] ?? '';
+            $mailMessage->line('Your project permission has been updated.');
+            if ($project) {
+                $mailMessage->line('Project: ' . $project);
+            }
+            if ($permission) {
+                $mailMessage->line('New Permission: ' . $permission);
+            }
+        } else {
+            $mailMessage->line($message);
+        }
+
+        return $mailMessage
             ->action('View Details', $this->getActionUrl())
             ->line('Thank you for using our platform!');
     }
@@ -56,11 +121,84 @@ class InAppNotification extends Notification implements ShouldQueue
             NotificationType::WELCOME => 'Welcome to SMIA',
             NotificationType::REMINDER => 'Reminder',
             NotificationType::SECURITY_ALERT => 'Security Alert',
+            NotificationType::PROJECT_PERMISSION_UPDATED => 'Project Permission Updated',
+            NotificationType::NEW_PROJECT_INVITE => 'You have a new project invitation',
+            NotificationType::NEW_PROPOSAL => 'You have received a new proposal',
+            NotificationType::NEW_PROPOSAL_COMMENT => 'New comment on your proposal',
+            NotificationType::NEW_PROJECT_UPDATE => 'Project Update',
         };
     }
 
     private function getMessage(): string
     {
+        if ($this->type === NotificationType::NEW_PROJECT_UPDATE) {
+            $projectTitle = $this->data['project_title'] ?? '';
+            $updateType = $this->data['update_type'] ?? '';
+            $updateBody = $this->data['update_body'] ?? '';
+            $msg = 'Project update';
+            if ($projectTitle) {
+                $msg .= ' for "' . $projectTitle . '"';
+            }
+            if ($updateType) {
+                $msg .= ' [' . $updateType . ']';
+            }
+            if ($updateBody) {
+                $msg .= ': ' . $updateBody;
+            }
+            return $msg;
+        }
+        if ($this->type === NotificationType::NEW_PROJECT_INVITE) {
+            $project = $this->data['project_title'] ?? $this->data['project_id'] ?? '';
+            $msg = 'You have been invited to a new project';
+            if ($project) {
+                $msg .= ': ' . $project;
+            }
+            return $msg;
+        }
+        if ($this->type === NotificationType::NEW_PROPOSAL) {
+            $project = $this->data['project_title'] ?? $this->data['project_id'] ?? '';
+            $msg = 'You have received a new proposal';
+            if ($project) {
+                $msg .= ' for project: ' . $project;
+            }
+            return $msg;
+        }
+        if ($this->type === NotificationType::NEW_PROPOSAL_COMMENT) {
+            $proposal = $this->data['proposal_id'] ?? '';
+            $msg = 'There is a new comment on your proposal';
+            if ($proposal) {
+                $msg .= ' (Proposal ID: ' . $proposal . ')';
+            }
+            return $msg;
+        }
+        if ($this->type === NotificationType::PROJECT_UPDATE) {
+            $projectTitle = $this->data['project_title'] ?? '';
+            $updateType = $this->data['update_type'] ?? '';
+            $updateBody = $this->data['update_body'] ?? '';
+            $msg = 'Project update';
+            if ($projectTitle) {
+                $msg .= ' for "' . $projectTitle . '"';
+            }
+            if ($updateType) {
+                $msg .= ' [' . $updateType . ']';
+            }
+            if ($updateBody) {
+                $msg .= ': ' . $updateBody;
+            }
+            return $msg;
+        }
+        if ($this->type === NotificationType::PROJECT_PERMISSION_UPDATED) {
+            $project = $this->data['project_title'] ?? $this->data['project_id'] ?? '';
+            $permission = $this->data['permission'] ?? '';
+            $msg = 'Your project permission has been updated';
+            if ($project) {
+                $msg .= ' for project: ' . $project;
+            }
+            if ($permission) {
+                $msg .= ' (New permission: ' . $permission . ')';
+            }
+            return $msg;
+        }
         return $this->data['message'] ?? match ($this->type) {
             NotificationType::PROJECT_INVITE => 'You have been invited to join a project.',
             NotificationType::PROJECT_UPDATE => 'A project you are involved with has been updated.',
@@ -108,6 +246,11 @@ class InAppNotification extends Notification implements ShouldQueue
             NotificationType::WELCOME => $baseUrl . '/dashboard',
             NotificationType::REMINDER => $baseUrl . '/dashboard',
             NotificationType::SECURITY_ALERT => $baseUrl . '/security',
+            NotificationType::PROJECT_PERMISSION_UPDATED => $baseUrl . '/projects/' . ($this->data['project_id'] ?? ''),
+            NotificationType::NEW_PROJECT_INVITE => $baseUrl . '/projects/' . ($this->data['project_id'] ?? ''),
+            NotificationType::NEW_PROPOSAL => $baseUrl . '/proposals/' . ($this->data['proposal_id'] ?? ''),
+            NotificationType::NEW_PROPOSAL_COMMENT => $baseUrl . '/proposals/' . ($this->data['proposal_id'] ?? ''),
+            NotificationType::NEW_PROJECT_UPDATE => $baseUrl . '/projects/' . ($this->data['project_id'] ?? ''),
         };
     }
 }

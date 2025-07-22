@@ -5,59 +5,56 @@ namespace App\Http\Controllers;
 use App\Enums\CREATOR_PROJECT_PERMISSION;
 use App\Enums\PROJECT_INVITE_STATUS;
 use App\Enums\PROJECT_PROPOSAL_STATUS;
+use App\Enums\NotificationType;
 use App\Models\Creator;
 use App\Models\Project;
 use App\Models\ProjectCreator;
 use App\Models\ProjectInvite;
 use App\Models\ProjectProposal;
 use App\Models\ProposalComment;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Log;
 
 class ProjectController extends CrudController
 {
+    private NotificationService $notificationService;
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     protected function getModel(): string
     {
         return Project::class;
     }
-
     protected function getTable(): string
     {
         return 'projects';
     }
-
     protected function getModelClass(): string
     {
         return Project::class;
     }
-
     protected function afterReadOne($project, Request $request)
     {
         $proposalsCount = $project->proposals()->count();
-
         // Load project creators with their creator and user relationships
         $projectCreators = $project->creators()->with(['creator.user'])->get();
-
         $hiredCreatorIds = $projectCreators->pluck('creator_id')->toArray();
-
         if ($project->creator_id) {
             $hiredCreatorIds[] = $project->creator_id;
         }
-
         $hiresCount = collect($hiredCreatorIds)
             ->filter()
             ->unique()
             ->count();
-
         $invitedCreatorIds = $project->invites()->pluck('creator_id')->toArray();
-
         $project->setAttribute('invited_creator_ids', $invitedCreatorIds);
         $project->setAttribute('proposals_count', $proposalsCount);
         $project->setAttribute('hires_count', $hiresCount);
         $project->setAttribute('project_creators', $projectCreators);
     }
-
     public function readAllByCreator(Request $request, $creatorId)
     {
         try {
@@ -65,9 +62,7 @@ class ProjectController extends CrudController
             if (! $user->hasPermission('projects', 'read_all') && !$user->hasPermission('projects', 'read_own')) {
                 return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
             }
-
             $query = Project::where('creator_id', $creatorId);
-
             $perPage = $request->input('per_page', 50);
             if ($perPage === 'all') {
                 $projects = $query->get();
@@ -85,7 +80,6 @@ class ProjectController extends CrudController
                 ];
                 $projects = $projects->items();
             }
-
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -99,7 +93,6 @@ class ProjectController extends CrudController
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
-
     public function readAllByClient(Request $request, $clientId)
     {
         try {
@@ -107,9 +100,7 @@ class ProjectController extends CrudController
             if (! $user->hasPermission('projects', 'read_all') && !$user->hasPermission('projects', 'read_own')) {
                 return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
             }
-
             $query = Project::withCount('proposals')->where('client_id', $clientId);
-
             $perPage = $request->input('per_page', 50);
             if ($perPage === 'all') {
                 $projects = $query->get();
@@ -127,7 +118,6 @@ class ProjectController extends CrudController
                 ];
                 $projects = $projects->items();
             }
-
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -141,7 +131,6 @@ class ProjectController extends CrudController
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
-
     public function readAllByAmbassador(Request $request, $ambassadorId)
     {
         try {
@@ -149,9 +138,7 @@ class ProjectController extends CrudController
             if (! $user->hasPermission('projects', 'read_all') && !$user->hasPermission('projects', 'read_own')) {
                 return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
             }
-
             $query = Project::where('ambassador_id', $ambassadorId);
-
             $perPage = $request->input('per_page', 50);
             if ($perPage === 'all') {
                 $projects = $query->get();
@@ -169,7 +156,6 @@ class ProjectController extends CrudController
                 ];
                 $projects = $projects->items();
             }
-
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -183,36 +169,30 @@ class ProjectController extends CrudController
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
-
     public function inviteCreator(Request $request)
     {
         $user = $request->user();
         if (! $user->hasPermission('projects', 'invite_creator')) {
             return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
         }
-
         try {
             $projectId = $request->input('project_id');
             $creatorId = $request->input('creator_id');
             $message   = $request->input('message');
-
             $project = Project::find($projectId);
             if (! $project) {
                 return response()->json(['success' => false, 'errors' => [__('common.project_not_found')]]);
             }
-
             $creator = Creator::find($creatorId);
             if (! $creator) {
                 return response()->json(['success' => false, 'errors' => [__('common.creator_not_found')]]);
             }
-
             if ($project->creator_id && $project->creator_id == $creatorId || $project->creators()->where('creator_id', $creatorId)->exists()) {
                 return response()->json([
                     'success' => false,
                     'errors'  => [__('projects.creator_already_hired')],
                 ]);
             }
-
             $existingInvite = ProjectInvite::where('project_id', $projectId)
                 ->where('creator_id', $creatorId)
                 ->whereIn('status', [
@@ -220,14 +200,12 @@ class ProjectController extends CrudController
                     PROJECT_INVITE_STATUS::ACCEPTED
                 ])
                 ->first();
-
             if ($existingInvite) {
                 return response()->json([
                     'success' => false,
                     'errors'  => [__('projects.invite_already_sent')],
                 ]);
             }
-
             $projectInvite = ProjectInvite::create([
                 'project_id' => $projectId,
                 'creator_id' => $creatorId,
@@ -235,16 +213,27 @@ class ProjectController extends CrudController
                 'status'     => PROJECT_INVITE_STATUS::PENDING,
                 'expires_at' => Carbon::now()->addDays(7),
             ]);
-
+            // Notify invited creator
+            if ($creator->user) {
+                $this->notificationService->send(
+                    $creator->user,
+                    NotificationType::NEW_PROJECT_INVITE,
+                    [
+                        'project_id' => $projectId,
+                        'project_title' => $project->title ?? null,
+                        'invite_id' => $projectInvite->id,
+                        'message' => $message,
+                    ],
+                    ['in_app', 'email']
+                );
+            }
             return response()->json(['success' => true, 'data' => $projectInvite]);
         } catch (\Exception $e) {
             Log::error('Error caught in function ProjectController.inviteCreator: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
-
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
-
     public function readAllInvitesByCreator(Request $request, $creatorId)
     {
         try {
@@ -258,24 +247,18 @@ class ProjectController extends CrudController
                     'errors'  => [__('common.permission_denied')],
                 ]);
             }
-
             ProjectInvite::where('creator_id', $creatorId)
                 ->where('status', PROJECT_INVITE_STATUS::PENDING)
                 ->where('expires_at', '<', now())
                 ->update(['status' => PROJECT_INVITE_STATUS::EXPIRED]);
-
             $query = ProjectInvite::with([
                 'project:id,title,budget,status,start_date,end_date,client_id',
-
                 'project.client:id,user_id,company_name,company_size,industry',
-
                 'project.client.user:id,first_name,last_name,profile_image',
             ])
                 ->where('creator_id', $creatorId)
                 ->orderByDesc('created_at');
-
             $perPage = $request->input('per_page', 50);
-
             if ($perPage === 'all') {
                 $invites = $query->get();
                 $meta    = [
@@ -292,7 +275,6 @@ class ProjectController extends CrudController
                 ];
                 $invites = $invites->items();
             }
-
             return response()->json([
                 'success' => true,
                 'data'    => [
@@ -303,27 +285,23 @@ class ProjectController extends CrudController
         } catch (\Throwable $e) {
             Log::error('Error in ProjectController.readAllInvitesByCreator: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
-
             return response()->json([
                 'success' => false,
                 'errors'  => [__('common.unexpected_error')],
             ]);
         }
     }
-
     public function declineInvite(Request $request, $id)
     {
         try {
             $user   = $request->user();
             $invite = ProjectInvite::with('creator.user')->find($id);
-
             if (! $invite) {
                 return response()->json([
                     'success' => false,
                     'errors'  => [__('projects.invite_not_found')],
                 ]);
             }
-
             $isReceiver = $invite->creator && $invite->creator->user_id === $user->id;
             if (! $isReceiver && ! $user->hasPermission('projects', 'manage_invites')) {
                 return response()->json([
@@ -331,19 +309,16 @@ class ProjectController extends CrudController
                     'errors'  => [__('common.permission_denied')],
                 ]);
             }
-
             if ($invite->status !== PROJECT_INVITE_STATUS::PENDING->value) {
                 return response()->json([
                     'success' => false,
                     'errors'  => [__('projects.invite_not_pending')],
                 ]);
             }
-
             $invite->update([
                 'status'      => PROJECT_INVITE_STATUS::DECLINED,
                 'declined_at' => now(),
             ]);
-
             return response()->json([
                 'success' => true,
                 'data'    => ['item' => $invite],
@@ -352,27 +327,23 @@ class ProjectController extends CrudController
         } catch (\Throwable $e) {
             Log::error('Error in ProjectController.declineInvite: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
-
             return response()->json([
                 'success' => false,
                 'errors'  => [__('common.unexpected_error')],
             ]);
         }
     }
-
     public function acceptInvite(Request $request, $id)
     {
         try {
             $user   = $request->user();
             $invite = ProjectInvite::with(['project', 'creator'])->find($id);
-
             if (! $invite) {
                 return response()->json([
                     'success' => false,
                     'errors'  => [__('projects.invite_not_found')],
                 ]);
             }
-
             $isReceiver = $invite->creator && $invite->creator->user_id === $user->id;
             if (! $isReceiver && ! $user->hasPermission('projects', 'manage_invites')) {
                 return response()->json([
@@ -380,14 +351,12 @@ class ProjectController extends CrudController
                     'errors'  => [__('common.permission_denied')],
                 ]);
             }
-
             if ($invite->status !== PROJECT_INVITE_STATUS::PENDING->value) {
                 return response()->json([
                     'success' => false,
                     'errors'  => [__('projects.invite_not_pending')],
                 ]);
             }
-
             $data = $request->only([
                 'amount',
                 'currency',
@@ -396,11 +365,9 @@ class ProjectController extends CrudController
                 'attachments',
                 'meta'
             ]);
-
             if (array_key_exists('currency', $data) && is_null($data['currency'])) {
                 $data['currency'] = 'USD';
             }
-
             $proposal = ProjectProposal::create([
                 'invite_id'     => $invite->id,
                 'project_id'    => $invite->project_id,
@@ -408,12 +375,25 @@ class ProjectController extends CrudController
                 'status'        => PROJECT_PROPOSAL_STATUS::PENDING->value,
                 ...$data,
             ]);
-
+            // Notify project client of new proposal
+            $project = $invite->project;
+            if ($project && $project->client && $project->client->user) {
+                $this->notificationService->send(
+                    $project->client->user,
+                    NotificationType::NEW_PROPOSAL,
+                    [
+                        'project_id' => $project->id,
+                        'project_title' => $project->title ?? null,
+                        'proposal_id' => $proposal->id,
+                        'creator_id' => $invite->creator_id,
+                    ],
+                    ['in_app', 'email']
+                );
+            }
             $invite->update([
                 'status'      => PROJECT_INVITE_STATUS::ACCEPTED,
                 'accepted_at' => now(),
             ]);
-
             return response()->json([
                 'success' => true,
                 'data'    => ['item' => $proposal],
@@ -422,14 +402,12 @@ class ProjectController extends CrudController
         } catch (\Throwable $e) {
             Log::error('Error in ProjectController.acceptInvite: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
-
             return response()->json([
                 'success' => false,
                 'errors'  => [__('common.unexpected_error')],
             ]);
         }
     }
-
     public function readAllProposalsByCreator(Request $request, $creatorId)
     {
         try {
@@ -440,14 +418,12 @@ class ProjectController extends CrudController
             ) {
                 return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
             }
-
             $query = ProjectProposal::with([
                 'project:id,title,budget,status,start_date,end_date,client_id',
                 'project.client:id,user_id,company_name',
                 'project.client.user:id,first_name,last_name,profile_image',
             ])->where('creator_id', $creatorId)
                 ->orderByDesc('created_at');
-
             $perPage = $request->input('per_page', 50);
             if ($perPage === 'all') {
                 $proposals = $query->get();
@@ -461,7 +437,6 @@ class ProjectController extends CrudController
                 ];
                 $proposals = $proposals->items();
             }
-
             return response()->json([
                 'success' => true,
                 'data' => ['items' => $proposals, 'meta' => $meta],
@@ -471,7 +446,6 @@ class ProjectController extends CrudController
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
-
     public function readAllProposalsByProject(Request $request, $projectId)
     {
         try {
@@ -482,15 +456,12 @@ class ProjectController extends CrudController
             ) {
                 return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
             }
-
             $query = ProjectProposal::with([
                 'creator:id,user_id',
                 'creator.user:id,first_name,last_name,profile_image',
-
                 'project:id,title,budget,status,start_date,end_date,creator_id',
             ])->where('project_id', $projectId)
                 ->orderByDesc('created_at');
-
             $perPage = $request->input('per_page', 50);
             if ($perPage === 'all') {
                 $proposals = $query->get();
@@ -504,7 +475,6 @@ class ProjectController extends CrudController
                 ];
                 $proposals = $proposals->items();
             }
-
             return response()->json([
                 'success' => true,
                 'data' => ['items' => $proposals, 'meta' => $meta],
@@ -514,31 +484,25 @@ class ProjectController extends CrudController
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
-
     public function addCommentToProposal(Request $request, $proposalId)
     {
         try {
             $user      = $request->user();
             $proposal  = ProjectProposal::with(['creator.user', 'project.client.user'])->findOrFail($proposalId);
-
             $isCreator = $proposal->creator?->user_id === $user->id;
             $isClient  = $proposal->project?->client?->user_id === $user->id;
-
             if (! ($isCreator || $isClient || $user->hasPermission('projects', 'manage_comments'))) {
                 return response()->json([
                     'success' => false,
                     'errors'  => [__('common.permission_denied')]
                 ]);
             }
-
             $data = $request->validate(ProposalComment::rules());
-
             if ($data['parent_id'] ?? false) {
                 $parent = ProposalComment::where('proposal_id', $proposalId)
                     ->whereNull('parent_id')
                     ->findOrFail($data['parent_id']);
             }
-
             $comment = ProposalComment::create([
                 'proposal_id' => $proposalId,
                 'user_id'     => $user->id,
@@ -546,7 +510,37 @@ class ProjectController extends CrudController
                 'body'        => $data['body'],
                 'attachments' => $data['attachments'] ?? null,
             ]);
-
+            // Notify proposal creator and client (if not the commenter)
+            $notifiedUserIds = [$user->id];
+            if ($proposal->creator && $proposal->creator->user && !in_array($proposal->creator->user->id, $notifiedUserIds)) {
+                $this->notificationService->send(
+                    $proposal->creator->user,
+                    NotificationType::NEW_PROPOSAL_COMMENT,
+                    [
+                        'project_id' => $proposal->project_id,
+                        'project_title' => $proposal->project->title ?? null,
+                        'proposal_id' => $proposal->id,
+                        'comment_id' => $comment->id,
+                        'comment_body' => $comment->body,
+                    ],
+                    ['in_app', 'email']
+                );
+                $notifiedUserIds[] = $proposal->creator->user->id;
+            }
+            if ($proposal->project && $proposal->project->client && $proposal->project->client->user && !in_array($proposal->project->client->user->id, $notifiedUserIds)) {
+                $this->notificationService->send(
+                    $proposal->project->client->user,
+                    NotificationType::NEW_PROPOSAL_COMMENT,
+                    [
+                        'project_id' => $proposal->project_id,
+                        'project_title' => $proposal->project->title ?? null,
+                        'proposal_id' => $proposal->id,
+                        'comment_id' => $comment->id,
+                        'comment_body' => $comment->body,
+                    ],
+                    ['in_app', 'email']
+                );
+            }
             return response()->json([
                 'success' => true,
                 'data'    => ['item' => $comment]
@@ -555,33 +549,27 @@ class ProjectController extends CrudController
             Log::error('addCommentToProposal: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'errors'  => [__('common.unexpected_error')],
+                'errors'  => [__('common.unexpected_error')]
             ]);
         }
     }
-
     public function readAllCommentsByProposal(Request $request, $proposalId)
     {
         try {
             $user = $request->user();
-
             $proposal = ProjectProposal::findOrFail($proposalId);
-
             $isCreator = $proposal->creator?->user_id === $user->id;
             $isClient  = $proposal->project?->client?->user_id === $user->id;
-
             if (! ($isCreator || $isClient || $user->hasPermission('projects', 'manage_comments'))) {
                 return response()->json([
                     'success' => false,
-                    'errors'  => [__('common.permission_denied')],
+                    'errors'  => [__('common.permission_denied')]
                 ]);
             }
-
             $comments = ProposalComment::where('proposal_id', $proposalId)
                 ->whereNull('parent_id')
                 ->orderBy('created_at')
                 ->get();
-
             return response()->json([
                 'success' => true,
                 'data'    => ['items' => $comments],
@@ -590,29 +578,35 @@ class ProjectController extends CrudController
             Log::error('readAllCommentsByProposal: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'errors'  => [__('common.unexpected_error')],
+                'errors'  => [__('common.unexpected_error')]
             ]);
         }
     }
-
     public function approveProposal(Request $request, $proposalId)
     {
         try {
             $user = $request->user();
             $proposal = ProjectProposal::with(['creator', 'project'])->findOrFail($proposalId);
-
             $isClient = $proposal->project?->client?->user_id === $user->id;
-
             if (!$isClient && !$user->hasPermission('projects', 'manage_proposals')) {
                 return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
             }
-
             if ($proposal->status !== PROJECT_PROPOSAL_STATUS::PENDING->value) {
                 return response()->json(['success' => false, 'errors' => [__('projects.proposal_not_pending')]]);
             }
-
             $proposal->update(['status' => PROJECT_PROPOSAL_STATUS::ACCEPTED]);
-
+            // Notify proposal creator
+            if ($proposal->creator && $proposal->creator->user) {
+                $this->notificationService->send(
+                    $proposal->creator->user,
+                    NotificationType::PROPOSAL_ACCEPTED,
+                    [
+                        'project_id' => $proposal->project_id,
+                        'proposal_id' => $proposal->id,
+                    ],
+                    ['in_app', 'email']
+                );
+            }
             ProjectCreator::create([
                 'project_id' => $proposal->project_id,
                 'creator_id' => $proposal->creator_id,
@@ -620,7 +614,6 @@ class ProjectController extends CrudController
                 'status'     => 'ACTIVE',
                 'permission' => CREATOR_PROJECT_PERMISSION::EDITOR,
             ]);
-
             return response()->json([
                 'success' => true,
                 'data'    => ['item' => $proposal],
@@ -631,25 +624,31 @@ class ProjectController extends CrudController
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
-
     public function declineProposal(Request $request, $proposalId)
     {
         try {
             $user = $request->user();
             $proposal = ProjectProposal::with('project.client.user')->findOrFail($proposalId);
-
             $isClient = $proposal->project?->client?->user_id === $user->id;
-
             if (!$isClient && !$user->hasPermission('projects', 'manage_proposals')) {
                 return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
             }
-
             if ($proposal->status !== PROJECT_PROPOSAL_STATUS::PENDING->value) {
                 return response()->json(['success' => false, 'errors' => [__('projects.proposal_not_pending')]]);
             }
-
             $proposal->update(['status' => PROJECT_PROPOSAL_STATUS::REJECTED]);
-
+            // Notify proposal creator
+            if ($proposal->creator && $proposal->creator->user) {
+                $this->notificationService->send(
+                    $proposal->creator->user,
+                    NotificationType::PROPOSAL_REJECTED,
+                    [
+                        'project_id' => $proposal->project_id,
+                        'proposal_id' => $proposal->id,
+                    ],
+                    ['in_app', 'email']
+                );
+            }
             return response()->json([
                 'success' => true,
                 'data'    => ['item' => $proposal],
@@ -660,35 +659,42 @@ class ProjectController extends CrudController
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
-
     public function updateCreatorPermission(Request $request, $projectId, $creatorId)
     {
         try {
             $user = $request->user();
             $project = Project::findOrFail($projectId);
-
             // Check if user has permission to manage this project
             $isClient = $project->client?->user_id === $user->id;
             $isAmbassador = $project->ambassador?->user_id === $user->id;
-
             if (!$isClient && !$isAmbassador && !$user->hasPermission('projects', 'manage_creators')) {
                 return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
             }
-
             $validated = $request->validate([
                 'permission' => 'required|in:' . implode(',', array_column(CREATOR_PROJECT_PERMISSION::cases(), 'value')),
             ]);
-
             $projectCreator = ProjectCreator::where('project_id', $projectId)
                 ->where('creator_id', $creatorId)
                 ->first();
-
             if (!$projectCreator) {
                 return response()->json(['success' => false, 'errors' => [__('projects.creator_not_found')]]);
             }
-
             $projectCreator->update(['permission' => $validated['permission']]);
-
+            // Notify creator user of new permission
+            if ($projectCreator->creator && $projectCreator->creator->user) {
+                $project = $projectCreator->project;
+                $this->notificationService->send(
+                    $projectCreator->creator->user,
+                    NotificationType::PROJECT_PERMISSION_UPDATED,
+                    [
+                        'project_id' => $projectId,
+                        'project_title' => $project?->title,
+                        'creator_id' => $creatorId,
+                        'permission' => $validated['permission'],
+                    ],
+                    ['in_app', 'email']
+                );
+            }
             return response()->json([
                 'success' => true,
                 'data' => ['item' => $projectCreator],
@@ -699,12 +705,10 @@ class ProjectController extends CrudController
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
-
     public function readAllPublicProjects(Request $request)
     {
         try {
             $query = Project::query()->where('is_public', true);
-
             // Apply filters
             $filters = $request->input('filters', []);
             if (is_string($filters)) {
@@ -731,7 +735,6 @@ class ProjectController extends CrudController
                     }
                 }
             }
-
             $perPage = $request->input('per_page', 50);
             if ($perPage === 'all') {
                 $projects = $query->get();
@@ -749,7 +752,6 @@ class ProjectController extends CrudController
                 ];
                 $projects = $projects->items();
             }
-
             return response()->json([
                 'success' => true,
                 'data' => [
