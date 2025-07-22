@@ -69,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'getConversations']);
     Route::post('/conversations/direct', [\App\Http\Controllers\ChatController::class, 'createDirectConversation']);
     Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroupConversation']);
+    Route::post('/conversations/project', [\App\Http\Controllers\ChatController::class, 'getOrCreateProjectConversation']);
     Route::get('/conversations/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'getMessages']);
     Route::post('/conversations/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
     Route::put('/conversations/{conversationId}/read', [\App\Http\Controllers\ChatController::class, 'markAsRead']);

@@ -233,12 +233,12 @@ class ChatService
                 'sender_attributes' => $sender->getAttributes(),
             ]);
 
-            $this->notificationService->send(
-                $participant,
-                NotificationType::MESSAGE_RECEIVED,
-                $notificationData,
-                ['in_app', 'email']
-            );
+            // $this->notificationService->send(
+            //     $participant,
+            //     NotificationType::MESSAGE_RECEIVED,
+            //     $notificationData,
+            //     ['in_app', 'email']
+            // );
 
             // Broadcast user-specific event for real-time unread count updates
             broadcast(new \App\Events\MessageReceived($conversation, $message, $participant));

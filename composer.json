@@ -15,6 +15,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.7",
         "plesk/ext-laravel-integration": "*",
+        "pusher/pusher-php-server": "^7.2",
         "staudenmeir/eloquent-has-many-deep": "^1.7"
     },
     "require-dev": {

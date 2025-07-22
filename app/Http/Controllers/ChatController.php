@@ -207,4 +207,57 @@ class ChatController extends Controller
             'message' => 'Conversation marked as read.',
         ]);
     }
+
+    /**
+     * Fetch or create a project chat conversation by projectId.
+     * POST /chat/conversations/project
+     * Body: { project_id: int, name?: string, user_ids?: int[] }
+     */
+    public function getOrCreateProjectConversation(Request $request)
+    {
+        $user = Auth::user();
+        $request->validate([
+            'project_id' => 'required|integer|exists:projects,id',
+            'name' => 'sometimes|string|max:255',
+            'user_ids' => 'sometimes|array',
+            'user_ids.*' => 'integer|exists:users,id',
+        ]);
+        $projectId = $request->input('project_id');
+        $name = $request->input('name');
+        $userIds = $request->input('user_ids', []);
+
+        // Try to find an existing project conversation
+        $conversation = \App\Models\Conversation::where('type', 'project')
+            ->where('project_id', $projectId)
+            ->first();
+
+        if ($conversation) {
+            // Optionally, add the current user as a participant if not already
+            if (!$conversation->participants()->where('user_id', $user->id)->exists()) {
+                $conversation->participants()->attach($user->id, ['role' => 'member']);
+            }
+            return response()->json([
+                'success' => true,
+                'data' => $conversation->load('participants'),
+            ]);
+        }
+
+        // Gather participants: current user + any provided user_ids
+        $participants = [$user];
+        if (!empty($userIds)) {
+            $otherUsers = \App\Models\User::whereIn('id', $userIds)->get();
+            foreach ($otherUsers as $otherUser) {
+                if ($otherUser->id !== $user->id) {
+                    $participants[] = $otherUser;
+                }
+            }
+        }
+
+        // Create the project conversation
+        $conversation = $this->chatService->createProjectConversation($participants, $projectId, $name);
+        return response()->json([
+            'success' => true,
+            'data' => $conversation,
+        ]);
+    }
 }
