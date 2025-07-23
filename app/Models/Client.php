@@ -25,12 +25,14 @@ class Client extends BaseModel
     'billing_country',
     'tax_identifier',
     'budget',
+    'languages',
     'preferred_creators',
     'project_count',
     'default_project_settings',
   ];
 
   protected $casts = [
+    'languages' => 'array',
     'preferred_creators' => 'array',
     'default_project_settings' => 'array',
   ];
@@ -72,6 +74,7 @@ class Client extends BaseModel
       'billing_country' => "$required|string|max:255",
       'tax_identifier' => 'nullable|string|max:50',
       'budget' => "$required|in:SMALL,MEDIUM,LARGE,ENTERPRISE",
+      'languages' => 'nullable|array',
       'preferred_creators' => 'nullable|array',
       'default_project_settings' => 'nullable|array',
     ];
