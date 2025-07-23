@@ -11,9 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('user_profiles', function (Blueprint $table) {
-            $table->string('title', 255)->nullable()->after('user_id');
-        });
+        Schema::rename('sessions', 'user_sessions');
     }
 
     /**
@@ -21,8 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('user_profiles', function (Blueprint $table) {
-            $table->dropColumn('title');
-        });
+        Schema::rename('user_sessions', 'sessions');
     }
 };

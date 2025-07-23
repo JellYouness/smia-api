@@ -17,8 +17,6 @@ return new class extends Migration
 
             $table->text('bio')->nullable();
             $table->string('short_bio', 200)->nullable();
-            $table->string('contact_email')->nullable();
-            $table->string('contact_phone')->nullable();
 
             // Social links as JSON object
             $table->json('social_links')->nullable();

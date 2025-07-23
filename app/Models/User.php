@@ -35,7 +35,6 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
         'password',
         'first_name',
         'last_name',
-        'profile_image',
         'phone_number',
         'date_registered',
         'last_login',
@@ -45,14 +44,6 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
         'accepted_terms',
         'email_verified',
         'email_verified_at',
-        'preferred_language',
-        'timezone',
-        'language',
-        'notification_email',
-        'notification_sms',
-        'notification_push',
-        'notification_in_app',
-        'privacy',
         'two_factor_secret',
         'google_id',
         'facebook_id',
@@ -84,10 +75,6 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
     {
         return [
             'email_verified_at' => 'datetime',
-            'notification_email' => 'boolean',
-            'notification_sms' => 'boolean',
-            'notification_push' => 'boolean',
-            'notification_in_app' => 'boolean',
         ];
     }
 

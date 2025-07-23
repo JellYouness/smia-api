@@ -29,8 +29,6 @@ class UserSeeder extends Seeder
                 'two_factor_enabled' => false,
                 'accepted_terms' => true,
                 'email_verified' => true,
-                'preferred_language' => 'ENGLISH',
-                'timezone' => 'UTC'
             ]
         );
         $admin->assignRole(ROLE::SYSTEM_ADMINISTRATOR);
@@ -48,8 +46,6 @@ class UserSeeder extends Seeder
                 'two_factor_enabled' => false,
                 'accepted_terms' => true,
                 'email_verified' => true,
-                'preferred_language' => 'ENGLISH',
-                'timezone' => 'UTC'
             ]
         );
         $client->assignRole(ROLE::CLIENT);
@@ -67,8 +63,6 @@ class UserSeeder extends Seeder
                 'two_factor_enabled' => false,
                 'accepted_terms' => true,
                 'email_verified' => true,
-                'preferred_language' => 'ENGLISH',
-                'timezone' => 'UTC'
             ]
         );
         $creator->assignRole(ROLE::CREATOR);
@@ -86,8 +80,6 @@ class UserSeeder extends Seeder
                 'two_factor_enabled' => false,
                 'accepted_terms' => true,
                 'email_verified' => true,
-                'preferred_language' => 'ENGLISH',
-                'timezone' => 'UTC'
             ]
         );
         $ambassador->assignRole(ROLE::AMBASSADOR);
@@ -110,8 +102,6 @@ class UserSeeder extends Seeder
                     'two_factor_enabled' => false,
                     'accepted_terms' => true,
                     'email_verified' => true,
-                    'preferred_language' => 'ENGLISH',
-                    'timezone' => 'UTC'
                 ]
             );
 

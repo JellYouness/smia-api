@@ -8,15 +8,9 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('language')->nullable();
-            $table->boolean('notification_email')->default(true);
-            $table->boolean('notification_sms')->default(false);
-            $table->boolean('notification_push')->default(true);
-            $table->boolean('notification_in_app')->default(true);
-            $table->string('privacy')->default('PUBLIC');
-            $table->string('two_factor_secret')->nullable();
-            $table->string('google_id')->nullable();
-            $table->string('facebook_id')->nullable();
+            $table->string('two_factor_secret')->nullable()->after('remember_token');
+            $table->string('google_id')->nullable()->after('two_factor_secret');
+            $table->string('facebook_id')->nullable()->after('google_id');
         });
     }
 
@@ -24,12 +18,6 @@ return new class extends Migration {
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
-                'language',
-                'notification_email',
-                'notification_sms',
-                'notification_push',
-                'notification_in_app',
-                'privacy',
                 'two_factor_secret',
                 'google_id',
                 'facebook_id',

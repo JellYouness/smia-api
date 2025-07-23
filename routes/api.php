@@ -58,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
   // Sessions
   Route::get('/user/sessions', [\App\Http\Controllers\SessionController::class, 'index']);
   Route::delete('/user/sessions/{id}', [\App\Http\Controllers\SessionController::class, 'destroy']);
+  Route::delete('/user/sessions', [\App\Http\Controllers\SessionController::class, 'revokeAllExceptCurrent']);
 
   // Connected accounts
   Route::get('/user/connected-accounts', [\App\Http\Controllers\ConnectedAccountController::class, 'index']);

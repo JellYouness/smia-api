@@ -85,7 +85,7 @@ return [
     |
     */
 
-    'table' => 'sessions',
+    'table' => 'laravel_sessions',
 
     /*
     |--------------------------------------------------------------------------
@@ -128,7 +128,7 @@ return [
 
     'cookie' => env(
         'SESSION_COOKIE',
-        Str::slug(env('API_NAME', 'laravel'), '_').'_session'
+        Str::slug(env('API_NAME', 'laravel'), '_') . '_session'
     ),
 
     /*

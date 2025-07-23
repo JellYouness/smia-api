@@ -17,22 +17,22 @@ class NotificationService
         array $channels = ['in_app']
     ): void {
         // Create in-app notification
-        if (in_array('in_app', $channels) && $user->notification_in_app) {
+        if (in_array('in_app', $channels) && $user->profile->notification_preferences['in_app']) {
             $this->createInAppNotification($user, $type, $data);
         }
 
         // Send email notification
-        if (in_array('email', $channels) && $user->notification_email) {
+        if (in_array('email', $channels) && $user->profile->notification_preferences['email']) {
             $this->sendEmailNotification($user, $type, $data);
         }
 
         // Send SMS notification
-        if (in_array('sms', $channels) && $user->notification_sms) {
+        if (in_array('sms', $channels) && $user->profile->notification_preferences['sms']) {
             $this->sendSmsNotification($user, $type, $data);
         }
 
         // Send push notification
-        if (in_array('push', $channels) && $user->notification_push) {
+        if (in_array('push', $channels) && $user->profile->notification_preferences['push']) {
             $this->sendPushNotification($user, $type, $data);
         }
     }

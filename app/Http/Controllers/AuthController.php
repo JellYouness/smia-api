@@ -41,36 +41,6 @@ class AuthController extends Controller
             $userWithRelations = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])
                 ->find($user->id);
 
-            // Parse JSON fields to arrays for creator data
-            if ($userWithRelations->creator) {
-                $creator = $userWithRelations->creator;
-
-                // Parse JSON fields that might not be in the casts array
-                $jsonFields = [
-                    'languages',
-                    'education',
-                    'certifications',
-                    'achievements',
-                    'professional_background',
-                    'portfolio',
-                    'equipment_info',
-                    'regional_expertise',
-                    'skills',
-                    'media_types'
-                ];
-
-                foreach ($jsonFields as $field) {
-                    if (isset($creator->$field) && is_string($creator->$field)) {
-                        try {
-                            $creator->$field = json_decode($creator->$field, true) ?: [];
-                        } catch (\Exception $e) {
-                            $creator->$field = [];
-                        }
-                    } elseif (!isset($creator->$field)) {
-                        $creator->$field = [];
-                    }
-                }
-            }
 
             return response()->json(
                 [
@@ -410,7 +380,6 @@ class AuthController extends Controller
                         'experience' => 'nullable|integer|min:0',
                         'hourly_rate' => 'nullable|numeric|min:0',
                         'availability' => 'nullable|string|in:AVAILABLE,LIMITED,UNAVAILABLE,BUSY',
-                        'biography' => 'nullable|string|max:2000',
                         'languages' => 'nullable|array',
                         'languages.*.language' => 'required|string',
                         'languages.*.proficiency' => 'required|string|in:BASIC,INTERMEDIATE,FLUENT,NATIVE',
@@ -503,8 +472,7 @@ class AuthController extends Controller
                     'title' => 'nullable|string|max:255',
                     'date_of_birth' => 'nullable|date',
                     'gender' => 'nullable|in:MALE,FEMALE,OTHER',
-                    // 'preferred_language' => 'nullable|string|in:' . implode(',', array_values(Language::getCodes())),
-                    'preferred_language' => 'nullable|string|max:255',
+                    'preferred_language' => 'nullable|string|in:' . implode(',', array_values(Language::getCodes())),
                     'timezone' => 'nullable|string|max:100',
                     'profile_picture' => 'nullable|string|max:255',
                     'notification_preferences' => 'nullable|array',
@@ -540,13 +508,6 @@ class AuthController extends Controller
                     }
                 }
 
-                // Update user basic info
-                $user->update([
-                    'phone_number' => $validatedProfileData['phone_number'] ?? $user->phone_number,
-                    'preferred_language' => $validatedProfileData['preferred_language'] ?? $user->preferred_language,
-                    'timezone' => $validatedProfileData['timezone'] ?? $user->timezone,
-                ]);
-
                 // Create or update user profile
                 $profileData = [
                     'user_id' => $user->id,
@@ -557,6 +518,7 @@ class AuthController extends Controller
                     'country' => $validatedProfileData['country'] ?? null,
                     'postal_code' => $validatedProfileData['postal_code'] ?? null,
                     'bio' => $validatedProfileData['bio'] ?? null,
+                    'short_bio' => $validatedProfileData['short_bio'] ?? null,
                     'title' => $validatedProfileData['title'] ?? null,
                     'date_of_birth' => $validatedProfileData['date_of_birth'] ?? null,
                     'gender' => $validatedProfileData['gender'] ?? null,
