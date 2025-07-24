@@ -13,8 +13,7 @@ class UserProfile extends Model
 
   protected $fillable = [
     'user_id',
-    'first_name',
-    'last_name',
+    'title',
     'phone_number',
     'address',
     'city',
@@ -23,7 +22,7 @@ class UserProfile extends Model
     'postal_code',
     'profile_picture',
     'bio',
-    'title',
+    'short_bio',
     'date_of_birth',
     'gender',
     'preferred_language',
@@ -33,8 +32,6 @@ class UserProfile extends Model
     'social_media_links',
     'emergency_contact',
     'preferences',
-    'contact_email',
-    'contact_phone',
     'profile_visibility',
     'profile_completeness',
     'cover_image',
@@ -70,8 +67,8 @@ class UserProfile extends Model
     $required = $id ? 'sometimes|required' : 'required';
     return [
       'user_id' => $id ? 'sometimes|exists:users,id' : 'required|exists:users,id',
-      'first_name' => "$required|string|max:255",
-      'last_name' => "$required|string|max:255",
+      'title' => 'nullable|string|max:255',
+      'short_bio' => 'nullable|string|max:200',
       'phone_number' => 'nullable|string|max:20',
       'address' => 'nullable|string|max:255',
       'city' => 'nullable|string|max:255',
@@ -82,8 +79,7 @@ class UserProfile extends Model
       'bio' => 'nullable|string',
       'date_of_birth' => 'nullable|date',
       'gender' => 'nullable|in:MALE,FEMALE,OTHER',
-      //   'preferred_language' => 'nullable|string|in:' . implode(',', array_values(Language::getCodes())),
-      'preferred_language' => 'nullable|string|max:255',
+      'preferred_language' => 'nullable|string|in:' . implode(',', array_values(Language::getCodes())),
       'timezone' => 'nullable|string|max:100',
       'notification_preferences' => 'nullable|array',
       'privacy_settings' => 'nullable|array',

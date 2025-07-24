@@ -19,24 +19,39 @@ class UserProfileSeeder extends Seeder
         foreach ($users as $user) {
             UserProfile::create([
                 'user_id' => $user->id,
+                'title' => fake()->jobTitle(),
                 'bio' => fake()->paragraph(),
                 'short_bio' => fake()->sentence(),
-                'contact_email' => $user->email,
-                'contact_phone' => fake()->phoneNumber(),
-                'social_media_links' => json_encode([
-                    'linkedin' => 'https://linkedin.com/in/' . strtolower($user->username),
-                    'twitter' => 'https://twitter.com/' . strtolower($user->username),
-                    'facebook' => 'https://facebook.com/' . strtolower($user->username)
-                ]),
+                'phone_number' => fake()->phoneNumber(),
+                'address' => fake()->address(),
+                'city' => fake()->city(),
+                'state' => fake()->state(),
+                'country' => fake()->country(),
+                'postal_code' => fake()->postcode(),
+                'profile_picture' => fake()->imageUrl(),
+                'date_of_birth' => fake()->date(),
+                'gender' => fake()->randomElement(['MALE', 'FEMALE', 'OTHER']),
+                'social_media_links' => [
+                    [
+                        'linkedin' => 'https://linkedin.com/in/' . strtolower($user->username),
+                        'twitter' => 'https://twitter.com/' . strtolower($user->username),
+                        'facebook' => 'https://facebook.com/' . strtolower($user->username)
+                    ]
+                ],
                 'profile_visibility' => 'PUBLIC',
                 'profile_completeness' => fake()->numberBetween(50, 100),
                 'display_name' => $user->first_name . ' ' . $user->last_name,
-                'notification_preferences' => json_encode([
-                    'email' => true,
-                    'sms' => false,
-                    'push' => true
-                ]),
-                'audio_introduction' => null
+                'notification_preferences' => [
+                    [
+                        'email' => true,
+                        'sms' => false,
+                        'push' => true,
+                        'in_app' => true
+                    ]
+                ],
+                'audio_introduction' => null,
+                'preferred_language' => 'UTC',
+                'timezone' => 'UTC'
             ]);
         }
     }

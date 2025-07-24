@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('user_profiles', function (Blueprint $table) {
-            $table->string('title', 255)->nullable()->after('user_id');
+        Schema::table('clients', function (Blueprint $table) {
+            $table->json('languages')->nullable()->after('tax_identifier');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('user_profiles', function (Blueprint $table) {
-            $table->dropColumn('title');
+        Schema::table('clients', function (Blueprint $table) {
+            $table->dropColumn('languages');
         });
     }
 };

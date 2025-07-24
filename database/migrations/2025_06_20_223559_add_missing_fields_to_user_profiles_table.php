@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('user_profiles', function (Blueprint $table) {
             // Personal information fields
-            $table->string('phone_number')->nullable()->after('contact_phone');
+            $table->string('phone_number')->nullable()->after('short_bio');
             $table->string('address')->nullable()->after('phone_number');
             $table->string('city')->nullable()->after('address');
             $table->string('state')->nullable()->after('city');

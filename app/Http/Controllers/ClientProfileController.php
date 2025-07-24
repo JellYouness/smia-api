@@ -188,6 +188,45 @@ class ClientProfileController extends Controller
         }
     }
 
+    public function updateLanguages(Request $request, $userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+
+            if (!$user->client) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a client']
+                ]);
+            }
+
+            $validated = $request->validate([
+                'languages' => 'required|array',
+                'languages.*.language' => 'required|string',
+                'languages.*.proficiency' => 'required|string',
+            ]);
+
+            $user->client->update([
+                'languages' => json_encode($validated['languages']),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Client languages updated successfully',
+                'data' => [
+                    'languages' => $validated['languages']
+                ]
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'errors' => $e->errors()]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function updateLanguages: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
     public function getClientProfile($userId)
     {
         try {

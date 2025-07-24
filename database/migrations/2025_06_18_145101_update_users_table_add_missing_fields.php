@@ -17,8 +17,7 @@ return new class extends Migration
             $table->string('username')->nullable()->after('email');
             $table->string('first_name')->nullable()->after('username');
             $table->string('last_name')->nullable()->after('first_name');
-            $table->string('profile_image')->nullable()->after('last_name');
-            $table->string('phone_number')->nullable()->after('profile_image');
+            $table->string('phone_number')->nullable()->after('last_name');
             $table->timestamp('date_registered')->useCurrent()->after('phone_number');
             $table->timestamp('last_login')->nullable()->after('date_registered');
             $table->enum('status', ['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED', 'DELETED'])->default('PENDING')->after('last_login');
@@ -26,8 +25,6 @@ return new class extends Migration
             $table->boolean('two_factor_enabled')->default(false)->after('user_type');
             $table->boolean('accepted_terms')->default(false)->after('two_factor_enabled');
             $table->boolean('email_verified')->default(false)->after('accepted_terms');
-            $table->enum('preferred_language', ['ENGLISH', 'FRENCH', 'ARABIC', 'SPANISH'])->nullable()->after('email_verified');
-            $table->string('timezone')->nullable()->after('preferred_language');
         });
 
         // Generate usernames for existing users
@@ -67,7 +64,6 @@ return new class extends Migration
                 'username',
                 'first_name',
                 'last_name',
-                'profile_image',
                 'phone_number',
                 'date_registered',
                 'last_login',
@@ -76,8 +72,6 @@ return new class extends Migration
                 'two_factor_enabled',
                 'accepted_terms',
                 'email_verified',
-                'preferred_language',
-                'timezone'
             ]);
         });
     }

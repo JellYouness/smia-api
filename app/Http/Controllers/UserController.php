@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Log;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends CrudController
 {
@@ -109,6 +110,12 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
             $user->creator->update([
                 'portfolio' => json_encode($request->portfolio)
             ]);
@@ -130,6 +137,12 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
             $user->creator->update([
                 'skills' => json_encode($request->skills)
             ]);
@@ -151,6 +164,12 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
             $user->creator->update([
                 'certifications' => json_encode($request->certifications)
             ]);
@@ -172,6 +191,12 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
             $user->creator->update([
                 'professional_background' => json_encode($request->professional_background)
             ]);
@@ -193,6 +218,12 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
             $user->creator->update([
                 'achievements' => json_encode($request->achievements)
             ]);
@@ -214,6 +245,12 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
             $user->creator->update([
                 'equipment_info' => json_encode($request->equipment_info)
             ]);
@@ -235,6 +272,12 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
             $user->creator->update([
                 'regional_expertise' => json_encode($request->regional_expertise)
             ]);
@@ -259,6 +302,12 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
             $user->creator->update([
                 'media_types' => json_encode($request->media_types)
             ]);
@@ -280,15 +329,30 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
+            $validated = $request->validate([
+                'languages' => 'required|array',
+                'languages.*.language' => 'required|string',
+                'languages.*.proficiency' => 'required|string',
+            ]);
             $user->creator->update([
-                'languages' => json_encode($request->languages)
+                'languages' => json_encode($validated['languages'])
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Languages updated successfully',
-                'data' => $user->fresh()->load('profile', 'creator')
+                'data' => [
+                    'languages' => $validated['languages']
+                ]
             ]);
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'errors' => $e->errors()]);
         } catch (\Exception $e) {
             Log::error('Error caught in function UserController.updateLanguages : ' . $e->getMessage());
             Log::error($e->getTraceAsString());
@@ -301,6 +365,12 @@ class UserController extends CrudController
     {
         try {
             $user = User::findOrFail($id);
+            if (!$user->creator) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['User is not a creator']
+                ]);
+            }
             $user->creator->update([
                 'education' => json_encode($request->education)
             ]);
@@ -314,6 +384,37 @@ class UserController extends CrudController
             Log::error('Error caught in function UserController.updateEducation : ' . $e->getMessage());
             Log::error($e->getTraceAsString());
 
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    // PATCH: Update social media links in user profile
+    public function updateSocialMedia($id, Request $request)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            $validated = $request->validate([
+                'profile.social_media_links' => 'required|array',
+                'profile.social_media_links.linkedin' => 'nullable|string',
+                'profile.social_media_links.twitter' => 'nullable|string',
+                'profile.social_media_links.facebook' => 'nullable|string',
+            ]);
+            if ($user->profile) {
+                $user->profile->update([
+                    'social_media_links' => $validated['profile']['social_media_links'],
+                ]);
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Social media links updated successfully',
+                'data' => $user->fresh()->load('profile')
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'errors' => $e->errors()]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function UserController.updateSocialMedia : ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }

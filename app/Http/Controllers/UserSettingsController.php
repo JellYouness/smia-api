@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class UserSettingsController extends Controller
 {
@@ -12,14 +13,9 @@ class UserSettingsController extends Controller
         $user = Auth::user();
         return response()->json([
             'email' => $user->email,
-            'language' => $user->language ?? 'en',
-            'notifications' => [
-                'email' => (bool)($user->notification_email ?? true),
-                'sms' => (bool)($user->notification_sms ?? false),
-                'push' => (bool)($user->notification_push ?? true),
-                'inApp' => (bool)($user->notification_in_app ?? true),
-            ],
-            'privacy' => $user->privacy ?? 'PUBLIC',
+            'language' => $user->profile->language ?? 'en',
+            'notifications' => $user->profile->notification_preferences ?? [],
+            'privacy' => $user->profile->privacy_settings ?? [],
         ]);
     }
 
@@ -31,15 +27,12 @@ class UserSettingsController extends Controller
             'notifications.email' => 'boolean',
             'notifications.sms' => 'boolean',
             'notifications.push' => 'boolean',
-            'notifications.inApp' => 'boolean',
+            'notifications.in_app' => 'boolean',
             'privacy' => 'string|in:PUBLIC,PRIVATE,FRIENDS',
         ]);
-        $user->language = $data['language'];
-        $user->notification_email = $data['notifications']['email'];
-        $user->notification_sms = $data['notifications']['sms'];
-        $user->notification_push = $data['notifications']['push'];
-        $user->notification_in_app = $data['notifications']['inApp'];
-        $user->privacy = $data['privacy'];
+        $user->profile->language = $data['language'];
+        $user->profile->notification_preferences = $data['notifications'];
+        $user->profile->privacy_settings = $data['privacy'];
         $user->save();
         return response()->json(['success' => true]);
     }
