@@ -19,6 +19,10 @@ class MediaPostComment extends BaseModel
     'timecode',
   ];
 
+  protected $with = [
+    'author',
+  ];
+
   public function post(): BelongsTo
   {
     return $this->belongsTo(MediaPost::class, 'post_id');
@@ -39,7 +43,6 @@ class MediaPostComment extends BaseModel
     $id = $id ?? request()->route('id');
     $required = $id ? 'sometimes|required' : 'required';
     return [
-      'post_id' => "$required|exists:media_posts,id",
       'asset_id' => 'nullable|exists:media_post_assets,id',
       'author_id' => "$required|exists:users,id",
       'body' => "$required|string",

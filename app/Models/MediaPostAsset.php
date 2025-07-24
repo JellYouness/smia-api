@@ -19,6 +19,11 @@ class MediaPostAsset extends BaseModel
     'uploaded_by',
   ];
 
+  protected $with = [
+    'uploader',
+    'upload',
+  ];
+
   public function post(): BelongsTo
   {
     return $this->belongsTo(MediaPost::class, 'post_id');

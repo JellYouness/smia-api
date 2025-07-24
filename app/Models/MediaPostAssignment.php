@@ -20,6 +20,10 @@ class MediaPostAssignment extends BaseModel
     'assigned_at',
   ];
 
+  protected $with = [
+    'creator',
+  ];
+
   public function post(): BelongsTo
   {
     return $this->belongsTo(MediaPost::class, 'post_id');
