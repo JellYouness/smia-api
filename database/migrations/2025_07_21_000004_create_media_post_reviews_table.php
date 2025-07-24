@@ -12,13 +12,14 @@ return new class extends Migration
     Schema::create('media_post_reviews', function (Blueprint $table) {
       $table->id();
       $table->foreignId('post_id')->constrained('media_posts')->onDelete('cascade');
-      $table->foreignId('reviewer_id')->nullable()->constrained('users');
+      $table->morphs('reviewer');
       $table->enum('decision', array_column(MEDIA_POST_REVIEW_DECISION::cases(), 'value'))->nullable();
       $table->text('comment')->nullable();
 
+
       $table->timestamps();
 
-      $table->index('post_id');
+      $table->unique(['post_id', 'reviewer_type', 'reviewer_id']);
     });
   }
 

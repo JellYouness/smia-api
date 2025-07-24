@@ -59,6 +59,10 @@ class Creator extends BaseModel
     'rating_count' => 'integer',
   ];
 
+  protected $with = [
+    'user',
+  ];
+
   /**
    * Get the user that owns the creator.
    */

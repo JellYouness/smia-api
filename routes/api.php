@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\CreatorController;
 use App\Http\Controllers\AmbassadorController;
+use App\Http\Controllers\MediaPostController;
 use App\Http\Controllers\SystemAdministratorController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectUpdateController;
@@ -233,17 +234,36 @@ Route::middleware('auth:api')->group(
                         Route::patch('/invites/{id}/decline', 'declineInvite');
                         Route::post('/invites/{id}/accept', 'acceptInvite');
 
-                        Route::get('/proposals/creator/{creatorId}', 'readAllProposalsByCreator');
-                        Route::get('/proposals/project/{projectId}', 'readAllProposalsByProject');
-                        Route::post('/proposals/{proposalId}/comments', 'addCommentToProposal');
-                        Route::get('/proposals/{proposalId}/comments', 'readAllCommentsByProposal');
-                        Route::patch('/proposals/{proposalId}/approve', 'approveProposal');
-                        Route::patch('/proposals/{proposalId}/decline', 'declineProposal');
-                        Route::patch('/{id}/creators/{creatorId}/permission', 'updateCreatorPermission');
-                    }
-                );
-            }
+            Route::get('/proposals/creator/{creatorId}', 'readAllProposalsByCreator');
+            Route::get('/proposals/project/{projectId}', 'readAllProposalsByProject');
+            Route::post('/proposals/{proposalId}/comments', 'addCommentToProposal');
+            Route::get('/proposals/{proposalId}/comments', 'readAllCommentsByProposal');
+            Route::patch('/proposals/{proposalId}/approve', 'approveProposal');
+            Route::patch('/proposals/{proposalId}/decline', 'declineProposal');
+            Route::patch('/{id}/creators/{creatorId}/permission', 'updateCreatorPermission');
+          }
         );
+      }
+    );
+
+    Route::prefix('media_posts')->name('media_posts.')->group(
+      function () {
+        Route::controller(MediaPostController::class)->group(
+          function () {
+            Route::get('/', 'readAll');
+            Route::get('/{id}', 'readOne');
+            Route::post('/', 'createOne');
+            Route::put('/{id}', 'updateOne');
+            Route::patch('/{id}', 'patchOne');
+            Route::delete('/{id}', 'deleteOne');
+
+            Route::post('/{postId}/upsert_creator', 'upsertAssignee');
+            Route::delete('/{postId}/delete_creator', 'deleteAssignee');
+            Route::post('/{postId}/add_comment', 'addComment');
+          }
+        );
+      }
+    );
 
         Route::prefix('uploads')->name('uploads.')->group(
             function () {
