@@ -18,6 +18,7 @@ return new class extends Migration
                 $table->id();
                 $table->string('name')->unique()->nullable();
                 $table->string('path');
+                $table->unsignedBigInteger('size')->nullable();
                 $table->timestamps();
             }
         );

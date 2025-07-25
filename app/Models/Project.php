@@ -147,6 +147,11 @@ class Project extends Model
     return $this->hasMany(ProjectCreator::class);
   }
 
+  public function mediaPosts(): HasMany
+  {
+    return $this->hasMany(MediaPost::class);
+  }
+
   public static function rules($id = null): array
   {
     $id = $id ?? request()->route('id');

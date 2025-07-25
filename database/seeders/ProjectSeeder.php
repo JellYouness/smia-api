@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\CREATOR_PROJECT_PERMISSION;
+use App\Enums\CREATOR_PROJECT_STATUS;
 use Illuminate\Database\Seeder;
 use App\Models\Project;
 use App\Models\Client;
@@ -10,6 +11,7 @@ use App\Models\Ambassador;
 use App\Models\Creator;
 use App\Models\User;
 use App\Enums\PROJECT_STATUS;
+use App\Models\ProjectCreator;
 use Illuminate\Support\Facades\DB;
 
 class ProjectSeeder extends Seeder
@@ -34,14 +36,11 @@ class ProjectSeeder extends Seeder
             'is_public' => true,
         ]);
         if ($project1 && $creator) {
-            // Attach the creator to the project_creators table
-            DB::table('project_creators')->insert([
-                'project_id' => $project1->id,
-                'creator_id' => $creator->id,
-                'permission' => CREATOR_PROJECT_PERMISSION::EDITOR,
-                'status' => 'assigned',
-                'created_at' => now(),
-                'updated_at' => now(),
+            ProjectCreator::create([
+              'project_id' => $project1->id,
+              'creator_id' => $creator->id,
+              'permission' => null,
+              'status' => CREATOR_PROJECT_STATUS::CONFIRMED,
             ]);
         }
 

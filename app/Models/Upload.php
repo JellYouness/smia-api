@@ -13,6 +13,7 @@ class Upload extends BaseModel
     protected $fillable = [
         'name',
         'path',
+        'size',
     ];
 
     protected $appends = [
@@ -67,6 +68,7 @@ class Upload extends BaseModel
         return [
             'name' => 'nullable|string',
             'path' => 'required|string',
+            'size' => 'nullable|integer',
         ];
     }
 }

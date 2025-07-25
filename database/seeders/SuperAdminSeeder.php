@@ -30,8 +30,6 @@ class SuperAdminSeeder extends Seeder
                 'email_verified' => true,
                 'email_verified_at' => now(),
                 'accepted_terms' => true,
-                'preferred_language' => 'ENGLISH',
-                'timezone' => 'UTC',
             ]
         );
 

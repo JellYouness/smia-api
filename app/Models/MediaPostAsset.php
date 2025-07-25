@@ -13,7 +13,8 @@ class MediaPostAsset extends BaseModel
 
   protected $fillable = [
     'post_id',
-    'version',
+    'version_id',
+    'is_reference',
     'upload_id',
     'mime_type',
     'uploaded_by',
@@ -22,6 +23,8 @@ class MediaPostAsset extends BaseModel
   protected $with = [
     'uploader',
     'upload',
+
+    'version',
   ];
 
   public function post(): BelongsTo
@@ -31,7 +34,7 @@ class MediaPostAsset extends BaseModel
 
   public function uploader(): BelongsTo
   {
-    return $this->belongsTo(Creator::class, 'uploaded_by');
+    return $this->belongsTo(User::class, 'uploaded_by');
   }
 
   public function upload(): BelongsTo
@@ -39,16 +42,25 @@ class MediaPostAsset extends BaseModel
     return $this->belongsTo(Upload::class, 'upload_id');
   }
 
+  public function version(): BelongsTo
+  {
+    return $this->belongsTo(MediaPostVersion::class, 'version_id');
+  }
+
   public static function rules($id = null): array
   {
     $id = $id ?? request()->route('id');
     $required = $id ? 'sometimes|required' : 'required';
     return [
-      'post_id' => "$required|exists:media_posts,id",
-      'version' => "$required|integer",
+      'version_id' => 'nullable|exists:media_post_versions,id',
+      'is_reference' => 'boolean',
       'upload_id' => "$required|exists:uploads,id",
-      'mime_type'   => "$required|string|mimetypes:image/*,video/*,audio/*,application/pdf",
-      'uploaded_by' => 'nullable|exists:creators,id',
+      'mime_type'   => [
+        $required,
+        'string',
+        'starts_with:image/,video/,audio/,application/pdf',
+      ],
+      'uploaded_by' => 'nullable|exists:users,id',
     ];
   }
 }
