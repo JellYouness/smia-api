@@ -63,6 +63,21 @@ class Creator extends BaseModel
     'user',
   ];
 
+  protected static function booted()
+  {
+    parent::booted();
+    static::saved(function ($creator) {
+      $user = $creator->user()->with('profile', 'client', 'ambassador')->first();
+      if ($user && $user->profile) {
+        $completeness = $user->profile->calculateCompleteness($user);
+        if ($user->profile->profile_completeness !== $completeness) {
+          $user->profile->profile_completeness = $completeness;
+          $user->profile->saveQuietly();
+        }
+      }
+    });
+  }
+
   /**
    * Get the user that owns the creator.
    */

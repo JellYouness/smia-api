@@ -35,4 +35,14 @@ enum Language: string
             'es' => self::SPANISH->value,
         ];
     }
+
+    public static function getCodesValues(): array
+    {
+        return [
+            self::ENGLISH->value => 'en',
+            self::FRENCH->value => 'fr',
+            self::ARABIC->value => 'ar',
+            self::SPANISH->value => 'es',
+        ];
+    }
 }
