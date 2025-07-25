@@ -26,213 +26,213 @@ use App\Http\Controllers\NotificationController;
 */
 
 Route::prefix('auth')->name('auth.')->group(
-    function () {
-        Route::controller(AuthController::class)->group(
-            function () {
-                Route::post('/login', 'login');
-                Route::post('/register', 'register');
-                Route::post('/request-password-reset', 'requestPasswordReset');
-                Route::post('/reset-password', 'resetPassword');
-                Route::post('/resend-email-verification', 'resendEmailVerification')->middleware('throttle:6,1');
-                Route::get('/verify-email/{id}/{hash}', 'verifyEmail')->name('verification.verify');
-                Route::get(
-                    '/disconnected',
-                    function () {
-                        return response()->json(['success' => false, 'errors' => [__('auth.disconnected')]]);
-                    }
-                );
-            }
+  function () {
+    Route::controller(AuthController::class)->group(
+      function () {
+        Route::post('/login', 'login');
+        Route::post('/register', 'register');
+        Route::post('/request-password-reset', 'requestPasswordReset');
+        Route::post('/reset-password', 'resetPassword');
+        Route::post('/resend-email-verification', 'resendEmailVerification')->middleware('throttle:6,1');
+        Route::get('/verify-email/{id}/{hash}', 'verifyEmail')->name('verification.verify');
+        Route::get(
+          '/disconnected',
+          function () {
+            return response()->json(['success' => false, 'errors' => [__('auth.disconnected')]]);
+          }
         );
-    }
+      }
+    );
+  }
 );
 
 Route::middleware('auth:sanctum')->group(function () {
-    // User settings
-    Route::get('/user/settings', [\App\Http\Controllers\UserSettingsController::class, 'show']);
-    Route::put('/user/settings', [\App\Http\Controllers\UserSettingsController::class, 'update']);
+  // User settings
+  Route::get('/user/settings', [\App\Http\Controllers\UserSettingsController::class, 'show']);
+  Route::put('/user/settings', [\App\Http\Controllers\UserSettingsController::class, 'update']);
 
-    // 2FA
-    Route::get('/user/2fa', [\App\Http\Controllers\TwoFactorController::class, 'status']);
-    Route::post('/user/2fa/enable', [\App\Http\Controllers\TwoFactorController::class, 'enable']);
-    Route::post('/user/2fa/disable', [\App\Http\Controllers\TwoFactorController::class, 'disable']);
+  // 2FA
+  Route::get('/user/2fa', [\App\Http\Controllers\TwoFactorController::class, 'status']);
+  Route::post('/user/2fa/enable', [\App\Http\Controllers\TwoFactorController::class, 'enable']);
+  Route::post('/user/2fa/disable', [\App\Http\Controllers\TwoFactorController::class, 'disable']);
 
-    // Sessions
-    Route::get('/user/sessions', [\App\Http\Controllers\SessionController::class, 'index']);
-    Route::delete('/user/sessions/{id}', [\App\Http\Controllers\SessionController::class, 'destroy']);
-    Route::delete('/user/sessions', [\App\Http\Controllers\SessionController::class, 'revokeAllExceptCurrent']);
+  // Sessions
+  Route::get('/user/sessions', [\App\Http\Controllers\SessionController::class, 'index']);
+  Route::delete('/user/sessions/{id}', [\App\Http\Controllers\SessionController::class, 'destroy']);
+  Route::delete('/user/sessions', [\App\Http\Controllers\SessionController::class, 'revokeAllExceptCurrent']);
 
-    // Connected accounts
-    Route::get('/user/connected-accounts', [\App\Http\Controllers\ConnectedAccountController::class, 'index']);
-    Route::post('/user/connected-accounts/{provider}/disconnect', [\App\Http\Controllers\ConnectedAccountController::class, 'disconnect']);
-    Route::get('/user/connected-accounts/{provider}/connect', [\App\Http\Controllers\ConnectedAccountController::class, 'redirectToProvider']);
+  // Connected accounts
+  Route::get('/user/connected-accounts', [\App\Http\Controllers\ConnectedAccountController::class, 'index']);
+  Route::post('/user/connected-accounts/{provider}/disconnect', [\App\Http\Controllers\ConnectedAccountController::class, 'disconnect']);
+  Route::get('/user/connected-accounts/{provider}/connect', [\App\Http\Controllers\ConnectedAccountController::class, 'redirectToProvider']);
 
-    // Chat routes
-    Route::prefix('chat')->group(function () {
-        Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'getConversations']);
-        Route::post('/conversations/direct', [\App\Http\Controllers\ChatController::class, 'createDirectConversation']);
-        Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroupConversation']);
-        Route::post('/conversations/project', [\App\Http\Controllers\ChatController::class, 'getOrCreateProjectConversation']);
-        Route::get('/conversations/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'getMessages']);
-        Route::post('/conversations/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
-        Route::put('/conversations/{conversationId}/read', [\App\Http\Controllers\ChatController::class, 'markAsRead']);
-        Route::put('/messages/{messageId}', [\App\Http\Controllers\ChatController::class, 'editMessage']);
-        Route::delete('/messages/{messageId}', [\App\Http\Controllers\ChatController::class, 'deleteMessage']);
-    });
+  // Chat routes
+  Route::prefix('chat')->group(function () {
+    Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'getConversations']);
+    Route::post('/conversations/direct', [\App\Http\Controllers\ChatController::class, 'createDirectConversation']);
+    Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroupConversation']);
+    Route::post('/conversations/project', [\App\Http\Controllers\ChatController::class, 'getOrCreateProjectConversation']);
+    Route::get('/conversations/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'getMessages']);
+    Route::post('/conversations/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
+    Route::put('/conversations/{conversationId}/read', [\App\Http\Controllers\ChatController::class, 'markAsRead']);
+    Route::put('/messages/{messageId}', [\App\Http\Controllers\ChatController::class, 'editMessage']);
+    Route::delete('/messages/{messageId}', [\App\Http\Controllers\ChatController::class, 'deleteMessage']);
+  });
 });
 
 // Public projects route (no auth required)
 Route::get('projects/public', [\App\Http\Controllers\ProjectController::class, 'readAllPublicProjects']);
 
 Route::middleware('auth:api')->group(
-    function () {
-        Route::prefix('auth')->name('auth.')->group(
-            function () {
-                Route::controller(AuthController::class)->group(
-                    function () {
-                        Route::post('/me', 'me');
-                        Route::post('/logout', 'logout');
-                        Route::put('/profile', 'updateProfile');
-                        Route::post('/complete-profile', 'completeProfile');
-                    }
-                );
-            }
+  function () {
+    Route::prefix('auth')->name('auth.')->group(
+      function () {
+        Route::controller(AuthController::class)->group(
+          function () {
+            Route::post('/me', 'me');
+            Route::post('/logout', 'logout');
+            Route::put('/profile', 'updateProfile');
+            Route::post('/complete-profile', 'completeProfile');
+          }
         );
-        Route::prefix('users')->name('users.')->group(
-            function () {
-                Route::controller(UserController::class)->group(
-                    function () {
-                        Route::post('/', 'createOne');
-                        Route::get('/{id}', 'readOne');
-                        Route::get('/', 'readAll');
-                        Route::put('/{id}', 'updateOne');
-                        Route::patch('/{id}', 'patchOne');
-                        Route::delete('/{id}', 'deleteOne');
+      }
+    );
+    Route::prefix('users')->name('users.')->group(
+      function () {
+        Route::controller(UserController::class)->group(
+          function () {
+            Route::post('/', 'createOne');
+            Route::get('/{id}', 'readOne');
+            Route::get('/', 'readAll');
+            Route::put('/{id}', 'updateOne');
+            Route::patch('/{id}', 'patchOne');
+            Route::delete('/{id}', 'deleteOne');
 
-                        // Profile section specific routes
-                        Route::put('/{id}/about', 'updateAbout');
-                        Route::put('/{id}/portfolio', 'updatePortfolio');
-                        Route::put('/{id}/skills', 'updateSkills');
-                        Route::put('/{id}/certifications', 'updateCertifications');
-                        Route::put('/{id}/employment', 'updateEmployment');
-                        Route::put('/{id}/achievements', 'updateAchievements');
-                        Route::put('/{id}/equipment', 'updateEquipment');
-                        Route::put('/{id}/regional-expertise', 'updateRegionalExpertise');
-                        Route::put('/{id}/media-types', 'updateMediaTypes');
-                        Route::put('/{id}/languages', 'updateLanguages');
-                        Route::put('/{id}/education', 'updateEducation');
+            // Profile section specific routes
+            Route::put('/{id}/about', 'updateAbout');
+            Route::put('/{id}/portfolio', 'updatePortfolio');
+            Route::put('/{id}/skills', 'updateSkills');
+            Route::put('/{id}/certifications', 'updateCertifications');
+            Route::put('/{id}/employment', 'updateEmployment');
+            Route::put('/{id}/achievements', 'updateAchievements');
+            Route::put('/{id}/equipment', 'updateEquipment');
+            Route::put('/{id}/regional-expertise', 'updateRegionalExpertise');
+            Route::put('/{id}/media-types', 'updateMediaTypes');
+            Route::put('/{id}/languages', 'updateLanguages');
+            Route::put('/{id}/education', 'updateEducation');
 
-                        // Social media links
-                        Route::patch('/{id}/social-media', 'updateSocialMedia');
+            // Social media links
+            Route::patch('/{id}/social-media', 'updateSocialMedia');
 
-                        // Client-specific routes
-                        Route::put('/{id}/company', 'updateCompany');
-                        Route::put('/{id}/billing', 'updateBilling');
-                        Route::put('/{id}/budget', 'updateBudget');
-                        Route::put('/{id}/project-settings', 'updateProjectSettings');
-                    }
-                );
-
-                // Client Profile Controller routes
-                Route::controller(ClientProfileController::class)->group(
-                    function () {
-                        Route::get('/{id}/client-profile', 'getClientProfile');
-                        Route::put('/{id}/client/company', 'updateCompany');
-                        Route::put('/{id}/client/billing', 'updateBilling');
-                        Route::put('/{id}/client/budget', 'updateBudget');
-                        Route::put('/{id}/client/project-settings', 'updateProjectSettings');
-                        Route::put('/{id}/client/preferred-creators', 'updatePreferredCreators');
-                        Route::put('{id}/client-languages', 'updateLanguages');
-                    }
-                );
-            }
+            // Client-specific routes
+            Route::put('/{id}/company', 'updateCompany');
+            Route::put('/{id}/billing', 'updateBilling');
+            Route::put('/{id}/budget', 'updateBudget');
+            Route::put('/{id}/project-settings', 'updateProjectSettings');
+          }
         );
 
-        // Creators routes
-        Route::prefix('creators')->name('creators.')->group(
-            function () {
-                Route::controller(CreatorController::class)->group(
-                    function () {
-                        Route::post('/', 'createOne');
-                        Route::get('/', 'readAll');
-                        Route::get('/pending-applications', 'getPendingApplications');
-                        Route::get('/{id}', 'readOne');
-                        Route::put('/{id}', 'updateOne');
-                        Route::patch('/{id}', 'patchOne');
-                        Route::delete('/{id}', 'deleteOne');
-                        Route::patch('/{id}/application-status', 'updateApplicationStatus');
-                    }
-                );
-            }
+        // Client Profile Controller routes
+        Route::controller(ClientProfileController::class)->group(
+          function () {
+            Route::get('/{id}/client-profile', 'getClientProfile');
+            Route::put('/{id}/client/company', 'updateCompany');
+            Route::put('/{id}/client/billing', 'updateBilling');
+            Route::put('/{id}/client/budget', 'updateBudget');
+            Route::put('/{id}/client/project-settings', 'updateProjectSettings');
+            Route::put('/{id}/client/preferred-creators', 'updatePreferredCreators');
+            Route::put('{id}/client-languages', 'updateLanguages');
+          }
         );
+      }
+    );
 
-        // Clients routes
-        Route::prefix('clients')->name('clients.')->group(
-            function () {
-                Route::controller(ClientController::class)->group(
-                    function () {
-                        Route::post('/', 'createOne');
-                        Route::get('/{id}', 'readOne');
-                        Route::get('/', 'readAll');
-                        Route::put('/{id}', 'updateOne');
-                        Route::patch('/{id}', 'patchOne');
-                        Route::delete('/{id}', 'deleteOne');
-                    }
-                );
-            }
+    // Creators routes
+    Route::prefix('creators')->name('creators.')->group(
+      function () {
+        Route::controller(CreatorController::class)->group(
+          function () {
+            Route::post('/', 'createOne');
+            Route::get('/', 'readAll');
+            Route::get('/pending-applications', 'getPendingApplications');
+            Route::get('/{id}', 'readOne');
+            Route::put('/{id}', 'updateOne');
+            Route::patch('/{id}', 'patchOne');
+            Route::delete('/{id}', 'deleteOne');
+            Route::patch('/{id}/application-status', 'updateApplicationStatus');
+          }
         );
+      }
+    );
 
-        // Ambassadors routes
-        Route::prefix('ambassadors')->name('ambassadors.')->group(
-            function () {
-                Route::controller(AmbassadorController::class)->group(
-                    function () {
-                        Route::post('/', 'createOne');
-                        Route::get('/', 'readAll');
-                        Route::get('/pending-applications', 'getPendingApplications');
-                        Route::get('/{id}', 'readOne');
-                        Route::put('/{id}', 'updateOne');
-                        Route::patch('/{id}', 'patchOne');
-                        Route::delete('/{id}', 'deleteOne');
-                        Route::patch('/{id}/application-status', 'updateApplicationStatus');
-                    }
-                );
-            }
+    // Clients routes
+    Route::prefix('clients')->name('clients.')->group(
+      function () {
+        Route::controller(ClientController::class)->group(
+          function () {
+            Route::post('/', 'createOne');
+            Route::get('/{id}', 'readOne');
+            Route::get('/', 'readAll');
+            Route::put('/{id}', 'updateOne');
+            Route::patch('/{id}', 'patchOne');
+            Route::delete('/{id}', 'deleteOne');
+          }
         );
+      }
+    );
 
-        // System Administrators routes
-        Route::prefix('system-administrators')->name('system_administrators.')->group(
-            function () {
-                Route::controller(SystemAdministratorController::class)->group(
-                    function () {
-                        Route::post('/', 'createOne');
-                        Route::get('/{id}', 'readOne');
-                        Route::get('/', 'readAll');
-                        Route::put('/{id}', 'updateOne');
-                        Route::patch('/{id}', 'patchOne');
-                        Route::delete('/{id}', 'deleteOne');
-                    }
-                );
-            }
+    // Ambassadors routes
+    Route::prefix('ambassadors')->name('ambassadors.')->group(
+      function () {
+        Route::controller(AmbassadorController::class)->group(
+          function () {
+            Route::post('/', 'createOne');
+            Route::get('/', 'readAll');
+            Route::get('/pending-applications', 'getPendingApplications');
+            Route::get('/{id}', 'readOne');
+            Route::put('/{id}', 'updateOne');
+            Route::patch('/{id}', 'patchOne');
+            Route::delete('/{id}', 'deleteOne');
+            Route::patch('/{id}/application-status', 'updateApplicationStatus');
+          }
         );
+      }
+    );
 
-        Route::prefix('projects')->name('projects.')->group(
-            function () {
-                Route::controller(ProjectController::class)->group(
-                    function () {
-                        Route::post('/', 'createOne');
-                        Route::get('/', 'readAll');
-                        Route::get('/{id}', 'readOne');
-                        Route::put('/{id}', 'updateOne');
-                        Route::delete('/{id}', 'deleteOne');
+    // System Administrators routes
+    Route::prefix('system-administrators')->name('system_administrators.')->group(
+      function () {
+        Route::controller(SystemAdministratorController::class)->group(
+          function () {
+            Route::post('/', 'createOne');
+            Route::get('/{id}', 'readOne');
+            Route::get('/', 'readAll');
+            Route::put('/{id}', 'updateOne');
+            Route::patch('/{id}', 'patchOne');
+            Route::delete('/{id}', 'deleteOne');
+          }
+        );
+      }
+    );
 
-                        Route::get('/creator/{creatorId}', 'readAllByCreator');
-                        Route::get('/client/{clientId}', 'readAllByClient');
-                        Route::get('/ambassador/{ambassadorId}', 'readAllByAmbassador');
+    Route::prefix('projects')->name('projects.')->group(
+      function () {
+        Route::controller(ProjectController::class)->group(
+          function () {
+            Route::post('/', 'createOne');
+            Route::get('/', 'readAll');
+            Route::get('/{id}', 'readOne');
+            Route::put('/{id}', 'updateOne');
+            Route::delete('/{id}', 'deleteOne');
 
-                        Route::post('/invite-creator', 'inviteCreator');
-                        Route::get('/invites/creator/{creatorId}', 'readAllInvitesByCreator');
-                        Route::patch('/invites/{id}/decline', 'declineInvite');
-                        Route::post('/invites/{id}/accept', 'acceptInvite');
+            Route::get('/creator/{creatorId}', 'readAllByCreator');
+            Route::get('/client/{clientId}', 'readAllByClient');
+            Route::get('/ambassador/{ambassadorId}', 'readAllByAmbassador');
+
+            Route::post('/invite-creator', 'inviteCreator');
+            Route::get('/invites/creator/{creatorId}', 'readAllInvitesByCreator');
+            Route::patch('/invites/{id}/decline', 'declineInvite');
+            Route::post('/invites/{id}/accept', 'acceptInvite');
 
             Route::get('/proposals/creator/{creatorId}', 'readAllProposalsByCreator');
             Route::get('/proposals/project/{projectId}', 'readAllProposalsByProject');
@@ -241,6 +241,8 @@ Route::middleware('auth:api')->group(
             Route::patch('/proposals/{proposalId}/approve', 'approveProposal');
             Route::patch('/proposals/{proposalId}/decline', 'declineProposal');
             Route::patch('/{id}/creators/{creatorId}/permission', 'updateCreatorPermission');
+            Route::patch('/{id}/creators/{creatorId}/revoke-permission', 'revokeCreatorPermission');
+            Route::delete('/{id}/creators/{creatorId}/remove', 'removeCreatorFromProject');
           }
         );
       }
@@ -260,148 +262,155 @@ Route::middleware('auth:api')->group(
             Route::post('/{postId}/upsert_creator', 'upsertAssignee');
             Route::delete('/{postId}/delete_creator', 'deleteAssignee');
             Route::post('/{postId}/add_comment', 'addComment');
+
+            Route::post('/{postId}/add_asset', 'addAssetToMediaPost');
+            Route::get('/{postId}/assets', 'readAllAssetsByPost');
+            Route::delete('/{postId}/delete_asset', 'deleteAssetFromMediaPost');
+
+            Route::post('/{postId}/request_review', 'requestReview');
+            Route::post('/{postId}/review_version', 'reviewVersion');
           }
         );
       }
     );
 
-        Route::prefix('uploads')->name('uploads.')->group(
-            function () {
-                Route::controller(UploadController::class)->group(
-                    function () {
-                        Route::post('/', 'createOne');
-                        Route::get('/{id}', 'readOne');
-                        Route::get('/', 'readAll');
-                        Route::post('/{id}', 'updateOne');
-                        Route::delete('/{id}', 'deleteOne');
-                        Route::delete('/', 'deleteMulti');
-                    }
-                );
-            }
+    Route::prefix('uploads')->name('uploads.')->group(
+      function () {
+        Route::controller(UploadController::class)->group(
+          function () {
+            Route::post('/', 'createOne');
+            Route::get('/{id}', 'readOne');
+            Route::get('/', 'readAll');
+            Route::post('/{id}', 'updateOne');
+            Route::delete('/{id}', 'deleteOne');
+            Route::delete('/', 'deleteMulti');
+          }
         );
+      }
+    );
 
-        // Project Updates routes
-        Route::prefix('project-updates')->name('project-updates.')->group(
-            function () {
-                Route::controller(ProjectUpdateController::class)->group(
-                    function () {
-                        Route::post('/', 'createOne');
-                        Route::get('/{id}', 'readOne');
-                        Route::get('/', 'readAll');
-                        Route::put('/{id}', 'updateOne');
-                        Route::patch('/{id}', 'patchOne');
-                        Route::delete('/{id}', 'deleteOne');
-                        Route::get('/project/{projectId}', 'readAllByProject');
-                    }
-                );
-            }
+    // Project Updates routes
+    Route::prefix('project-updates')->name('project-updates.')->group(
+      function () {
+        Route::controller(ProjectUpdateController::class)->group(
+          function () {
+            Route::post('/', 'createOne');
+            Route::get('/{id}', 'readOne');
+            Route::get('/', 'readAll');
+            Route::put('/{id}', 'updateOne');
+            Route::patch('/{id}', 'patchOne');
+            Route::delete('/{id}', 'deleteOne');
+            Route::get('/project/{projectId}', 'readAllByProject');
+          }
         );
+      }
+    );
 
-        // Notifications routes
-        Route::prefix('notifications')->name('notifications.')->group(
-            function () {
-                Route::controller(NotificationController::class)->group(
-                    function () {
-                        Route::get('/', 'index');
-                        Route::get('/types', 'getNotificationTypes');
-                        Route::get('/unread-count', 'getUnreadCount');
-                        Route::get('/{id}', 'show');
-                        Route::patch('/{id}/read', 'markAsRead');
-                        Route::patch('/mark-all-read', 'markAllAsRead');
-                        Route::delete('/{id}', 'destroy');
-                    }
-                );
-            }
+    // Notifications routes
+    Route::prefix('notifications')->name('notifications.')->group(
+      function () {
+        Route::controller(NotificationController::class)->group(
+          function () {
+            Route::get('/', 'index');
+            Route::get('/types', 'getNotificationTypes');
+            Route::get('/unread-count', 'getUnreadCount');
+            Route::get('/{id}', 'show');
+            Route::patch('/{id}/read', 'markAsRead');
+            Route::patch('/mark-all-read', 'markAllAsRead');
+            Route::delete('/{id}', 'destroy');
+          }
         );
-    }
+      }
+    );
+  }
 );
 
 Route::get(
-    '/hello',
-    function () {
-        return response()->json(['success' => true, 'data' => ['message' => 'Hello World!']]);
-    }
+  '/hello',
+  function () {
+    return response()->json(['success' => true, 'data' => ['message' => 'Hello World!']]);
+  }
 );
 
 Route::prefix('uploads')->name('uploads.')->group(
-    function () {
-        Route::controller(UploadController::class)->group(
-            function () {
-                Route::get('/image/{id}', 'readImage');
-            }
-        );
-    }
+  function () {
+    Route::controller(UploadController::class)->group(
+      function () {
+        Route::get('/image/{id}', 'readImage');
+      }
+    );
+  }
 );
 
 Route::prefix('cloud')->name('cloud.')->group(
-    function () {
-        Route::get(
-            '/{path}',
-            function () {
-                $path = request()->path;
-                if (! Storage::disk('cloud')->exists($path)) {
-                    return response()->json(
-                        [
-                            'message' => 'File not found',
-                        ],
-                        404
-                    );
-                }
+  function () {
+    Route::get(
+      '/{path}',
+      function () {
+        $path = request()->path;
+        if (! Storage::disk('cloud')->exists($path)) {
+          return response()->json(
+            [
+              'message' => 'File not found',
+            ],
+            404
+          );
+        }
 
-                return Storage::disk('cloud')->response($path);
-            }
-        )->where('path', '.*');
-    }
+        return Storage::disk('cloud')->response($path);
+      }
+    )->where('path', '.*');
+  }
 );
 
 if (config('app.debug')) {
-    Route::prefix('debug')->name('debug.')->group(
-        function () {
-            // Route that display cache content in json format. Url parameter "cache key" is required (:key).
-            Route::get(
-                '/cache/{key}',
-                function ($key) {
-                    $cacheData = Cache::get($key);
-                    $success = $cacheData !== null;
+  Route::prefix('debug')->name('debug.')->group(
+    function () {
+      // Route that display cache content in json format. Url parameter "cache key" is required (:key).
+      Route::get(
+        '/cache/{key}',
+        function ($key) {
+          $cacheData = Cache::get($key);
+          $success = $cacheData !== null;
 
-                    return response()->json(
-                        [
-                            'success' => $success,
-                            'data' => $success ? $cacheData : null,
-                        ]
-                    );
-                }
-            );
-            Route::get(
-                '/routes-logs',
-                function () {
-                    // Récupérer les logs agrégés par route
-                    $routesData = DB::table('routes_logs')
-                        ->select('route', DB::raw('SUM(duration) as total_duration'), DB::raw('COUNT(*) as request_count'))
-                        ->groupBy('route')
-                        ->get();
-
-                    // Calculer le temps total de toutes les requêtes
-                    $totalTime = $routesData->sum('total_duration');
-
-                    // Ajouter le pourcentage du total à chaque route
-                    $routesData->map(
-                        function ($item) use ($totalTime) {
-                            $item->total_percentage = $totalTime > 0 ? ($item->total_duration / $totalTime) * 100 : 0;
-
-                            return $item;
-                        }
-                    );
-
-                    // Retourner les données
-                    return response()->json(
-                        [
-                            'routes' => $routesData,
-                            'total_time_ms' => $totalTime,
-                        ]
-                    );
-                }
-            );
+          return response()->json(
+            [
+              'success' => $success,
+              'data' => $success ? $cacheData : null,
+            ]
+          );
         }
-    );
+      );
+      Route::get(
+        '/routes-logs',
+        function () {
+          // Récupérer les logs agrégés par route
+          $routesData = DB::table('routes_logs')
+            ->select('route', DB::raw('SUM(duration) as total_duration'), DB::raw('COUNT(*) as request_count'))
+            ->groupBy('route')
+            ->get();
+
+          // Calculer le temps total de toutes les requêtes
+          $totalTime = $routesData->sum('total_duration');
+
+          // Ajouter le pourcentage du total à chaque route
+          $routesData->map(
+            function ($item) use ($totalTime) {
+              $item->total_percentage = $totalTime > 0 ? ($item->total_duration / $totalTime) * 100 : 0;
+
+              return $item;
+            }
+          );
+
+          // Retourner les données
+          return response()->json(
+            [
+              'routes' => $routesData,
+              'total_time_ms' => $totalTime,
+            ]
+          );
+        }
+      );
+    }
+  );
 }

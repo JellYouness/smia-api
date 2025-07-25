@@ -17,12 +17,14 @@ class MediaPostReview extends BaseModel
     'post_id',
     'reviewer_id',
     'reviewer_type',
+    'version_id',
     'decision',
     'comment',
   ];
 
   protected $with = [
     'reviewer',
+    'version',
   ];
 
   public function post(): BelongsTo
@@ -35,6 +37,11 @@ class MediaPostReview extends BaseModel
     return $this->morphTo();
   }
 
+  public function version(): BelongsTo
+  {
+    return $this->belongsTo(MediaPostVersion::class, 'version_id');
+  }
+
   public static function rules($id = null): array
   {
     $id = $id ?? request()->route('id');
@@ -43,6 +50,11 @@ class MediaPostReview extends BaseModel
       'post_id' => "$required|exists:media_posts,id",
       'reviewer_id' => "$required|integer",
       'reviewer_type' => "$required|string|in:AMBASSADOR,CLIENT",
+      'version_id'  => [
+        $required,
+        Rule::exists('media_post_versions', 'id')
+          ->where('post_id', request('post_id')),
+      ],
       'decision' => ['nullable', 'string', Rule::in(array_column(MEDIA_POST_REVIEW_DECISION::cases(), 'value'))],
       'comment' => 'nullable|string',
     ];

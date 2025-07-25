@@ -13,13 +13,14 @@ return new class extends Migration
       $table->id();
       $table->foreignId('post_id')->constrained('media_posts')->onDelete('cascade');
       $table->morphs('reviewer');
+      $table->foreignId('version_id')->constrained('media_post_versions')->cascadeOnDelete();
       $table->enum('decision', array_column(MEDIA_POST_REVIEW_DECISION::cases(), 'value'))->nullable();
       $table->text('comment')->nullable();
 
 
       $table->timestamps();
 
-      $table->unique(['post_id', 'reviewer_type', 'reviewer_id']);
+      $table->unique(['version_id','reviewer_type','reviewer_id']);
     });
   }
 

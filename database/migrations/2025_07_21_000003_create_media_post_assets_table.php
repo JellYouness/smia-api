@@ -11,10 +11,12 @@ return new class extends Migration
     Schema::create('media_post_assets', function (Blueprint $table) {
       $table->id();
       $table->foreignId('post_id')->constrained('media_posts')->onDelete('cascade');
-      $table->integer('version');
+      $table->foreignId('version_id')->nullable()->constrained('media_post_versions')->cascadeOnDelete();
+      $table->boolean('is_reference')->default(false);
+
       $table->foreignId('upload_id')->nullable()->constrained('uploads')->cascadeOnDelete();
       $table->string('mime_type', 100)->nullable();
-      $table->foreignId('uploaded_by')->nullable()->constrained('creators');
+      $table->foreignId('uploaded_by')->nullable()->constrained('users');
 
       $table->timestamps();
 

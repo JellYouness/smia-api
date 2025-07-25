@@ -40,7 +40,10 @@ class UploadController extends CrudController
             $filename = time().'-'.Str::uuid().'.'.$extension;
             Storage::disk('cloud')->put($filename, $file->get());
             $path = "/cloud/$filename";
-            $request->merge(['path' => $path]);
+            $request->merge([
+                'path' => $path,
+                'size' => $file->getSize(),
+            ]);
 
             return parent::createOne($request);
         } catch (\Exception $e) {
@@ -67,7 +70,10 @@ class UploadController extends CrudController
             $filename = time().'-'.Str::uuid().'.'.$extension;
             Storage::disk('cloud')->put($filename, $file->get());
             $path = "/cloud/$filename";
-            $request->merge(['path' => $path]);
+            $request->merge([
+                'path' => $path,
+                'size' => $file->getSize(),
+            ]);
 
             return parent::updateOne($id, $request);
         } catch (\Exception $e) {

@@ -50,6 +50,24 @@ class MediaPost extends BaseModel
     return $this->hasMany(MediaPostAsset::class, 'post_id');
   }
 
+  public function versions(): HasMany
+  {
+    return $this->hasMany(MediaPostVersion::class, 'post_id');
+  }
+
+  public function draftFiles(): HasMany
+  {
+    return $this->hasMany(MediaPostAsset::class, 'post_id')
+      ->whereNull('version_id')
+      ->where('is_reference', false);
+  }
+
+  public function referenceAssets(): HasMany
+  {
+    return $this->hasMany(MediaPostAsset::class, 'post_id')
+      ->where('is_reference', true);
+  }
+
   public function reviews(): HasMany
   {
     return $this->hasMany(MediaPostReview::class, 'post_id');
@@ -59,6 +77,7 @@ class MediaPost extends BaseModel
   {
     return $this->hasMany(MediaPostComment::class, 'post_id');
   }
+
 
   public static function booted()
   {
