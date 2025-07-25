@@ -86,12 +86,23 @@ class UserController extends CrudController
     // Profile section specific update methods
     public function updateAbout($id, Request $request)
     {
+        Log::info('Update about request data:', [
+            'all' => $request->all(),
+        ]);
         try {
             $user = User::findOrFail($id);
             $user->profile->update([
                 'title' => $request->title,
                 'bio' => $request->bio,
+                'short_bio' => $request->short_bio
             ]);
+
+            // Only update hourly_rate for creators
+            if ($user->creator && $request->has('hourly_rate')) {
+                $user->creator->update([
+                    'hourly_rate' => $request->hourly_rate
+                ]);
+            }
 
             return response()->json([
                 'success' => true,

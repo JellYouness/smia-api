@@ -37,6 +37,21 @@ class Client extends BaseModel
     'default_project_settings' => 'array',
   ];
 
+  protected static function booted()
+  {
+    parent::booted();
+    static::saved(function ($client) {
+      $user = $client->user()->with('profile', 'creator', 'ambassador')->first();
+      if ($user && $user->profile) {
+        $completeness = $user->profile->calculateCompleteness($user);
+        if ($user->profile->profile_completeness !== $completeness) {
+          $user->profile->profile_completeness = $completeness;
+          $user->profile->saveQuietly();
+        }
+      }
+    });
+  }
+
   /**
    * Get the user that owns the client.
    */

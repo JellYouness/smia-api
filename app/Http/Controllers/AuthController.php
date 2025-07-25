@@ -148,7 +148,6 @@ class AuthController extends Controller
                             'experience' => 0, // Default experience level
                             'regional_expertise' => $regionalExpertise,
                             'languages' => $data['languages'],
-                            'biography' => $data['biography'],
                             'verification_status' => 'UNVERIFIED',
                             'availability' => 'AVAILABLE',
                         ]);
@@ -339,94 +338,22 @@ class AuthController extends Controller
                     'state' => 'nullable|string|max:255',
                     'country' => 'nullable|string|max:100',
                     'postal_code' => 'nullable|string|max:20',
-                    'bio' => 'nullable|string|max:1000',
-                    'title' => 'nullable|string|max:255',
-                    'preferred_language' => 'nullable|string|in:' . implode(',', array_values(Language::getCodes())),
-                    'timezone' => 'nullable|string|max:100',
-                    'password' => 'nullable|string|min:8',
                 ];
 
                 $validatedUserData = $request->validate($userValidationRules);
 
-                // Convert preferred_language from frontend code to enum value
-                if (isset($validatedUserData['preferred_language'])) {
-                    $languageEnum = Language::fromCode($validatedUserData['preferred_language']);
-                    if ($languageEnum) {
-                        $validatedUserData['preferred_language'] = $languageEnum->value;
-                    } else {
-                        throw ValidationException::withMessages([
-                            'preferred_language' => ['Invalid language code provided.']
-                        ]);
-                    }
-                }
-
-                // Update user data
-                if (!empty($validatedUserData)) {
-                    // Hash password if provided
-                    if (isset($validatedUserData['password'])) {
-                        $validatedUserData['password'] = Hash::make($validatedUserData['password']);
-                    }
-
-                    $user->update($validatedUserData);
-                }
-
-                // Handle creator-specific updates
-                if ($user->hasRole(ROLE::CREATOR) && $user->creator) {
-                    $creatorValidationRules = [
-                        'skills' => 'nullable|array',
-                        'skills.*' => 'string',
-                        'media_types' => 'nullable|array',
-                        'media_types.*' => 'string',
-                        'experience' => 'nullable|integer|min:0',
-                        'hourly_rate' => 'nullable|numeric|min:0',
-                        'availability' => 'nullable|string|in:AVAILABLE,LIMITED,UNAVAILABLE,BUSY',
-                        'languages' => 'nullable|array',
-                        'languages.*.language' => 'required|string',
-                        'languages.*.proficiency' => 'required|string|in:BASIC,INTERMEDIATE,FLUENT,NATIVE',
-                        'regional_expertise' => 'nullable|array',
-                        'regional_expertise.*.region' => 'required|string',
-                        'regional_expertise.*.expertise_level' => 'required|string|in:BEGINNER,INTERMEDIATE,EXPERT',
-                    ];
-
-                    $validatedCreatorData = $request->validate($creatorValidationRules);
-
-                    if (!empty($validatedCreatorData)) {
-                        $user->creator->update($validatedCreatorData);
-                    }
-                }
-
-                // Handle client-specific updates
-                if ($user->hasRole(ROLE::CLIENT) && $user->client) {
-                    $clientValidationRules = [
-                        'company_name' => 'nullable|string|max:255',
-                        'company_size' => 'nullable|string|in:INDIVIDUAL,SMALL,MEDIUM,LARGE,ENTERPRISE',
-                        'industry' => 'nullable|string|in:MEDIA,EDUCATION,HEALTHCARE,TECHNOLOGY,FINANCE,ENTERTAINMENT,OTHER',
-                        'website_url' => 'nullable|url|max:255',
-                        'budget' => 'nullable|string|in:SMALL,MEDIUM,LARGE,ENTERPRISE',
-                        'billing_street' => 'nullable|string|max:255',
-                        'billing_city' => 'nullable|string|max:255',
-                        'billing_state' => 'nullable|string|max:255',
-                        'billing_postal_code' => 'nullable|string|max:20',
-                        'billing_country' => 'nullable|string|max:255',
-                        'tax_identifier' => 'nullable|string|max:50',
-                        'preferred_creators' => 'nullable|array',
-                        'preferred_creators.*' => 'integer|exists:users,id',
-                        'default_project_settings' => 'nullable|array',
-                        'default_project_settings.budget' => 'nullable|numeric|min:0',
-                        'default_project_settings.timeline' => 'nullable|string|max:255',
-                        'default_project_settings.requirements' => 'nullable|string|max:1000',
-                    ];
-
-                    $validatedClientData = $request->validate($clientValidationRules);
-
-                    if (!empty($validatedClientData)) {
-                        $user->client->update($validatedClientData);
-                    }
-                }
+                $user->update($validatedUserData);
+                $user->profile->update($validatedUserData);
 
                 // Reload user with relationships
                 $updatedUser = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])
                     ->find($user->id);
+
+                // --- DYNAMIC PROFILE COMPLETENESS CALCULATION ---
+                if ($updatedUser && $updatedUser->profile) {
+                    $completeness = $updatedUser->profile->calculateCompleteness($updatedUser);
+                    $updatedUser->profile->update(['profile_completeness' => $completeness]);
+                }
 
                 return response()->json([
                     'success' => true,
@@ -472,7 +399,7 @@ class AuthController extends Controller
                     'title' => 'nullable|string|max:255',
                     'date_of_birth' => 'nullable|date',
                     'gender' => 'nullable|in:MALE,FEMALE,OTHER',
-                    'preferred_language' => 'nullable|string|in:' . implode(',', array_values(Language::getCodes())),
+                    'preferred_language' => 'nullable|string|in:' . implode(',', array_values(Language::getCodesValues())),
                     'timezone' => 'nullable|string|max:100',
                     'profile_picture' => 'nullable|string|max:255',
                     'notification_preferences' => 'nullable|array',
@@ -497,16 +424,16 @@ class AuthController extends Controller
                 $validatedProfileData = $request->validate($profileValidationRules);
 
                 // Convert preferred_language from frontend code to enum value
-                if (isset($validatedProfileData['preferred_language'])) {
-                    $languageEnum = Language::fromCode($validatedProfileData['preferred_language']);
-                    if ($languageEnum) {
-                        $validatedProfileData['preferred_language'] = $languageEnum->value;
-                    } else {
-                        throw ValidationException::withMessages([
-                            'preferred_language' => ['Invalid language code provided.']
-                        ]);
-                    }
-                }
+                // if (isset($validatedProfileData['preferred_language'])) {
+                //     $languageEnum = Language::fromCode($validatedProfileData['preferred_language']);
+                //     if ($languageEnum) {
+                //         $validatedProfileData['preferred_language'] = $languageEnum->value;
+                //     } else {
+                //         throw ValidationException::withMessages([
+                //             'preferred_language' => ['Invalid language code provided.']
+                //         ]);
+                //     }
+                // }
 
                 // Create or update user profile
                 $profileData = [
@@ -539,8 +466,10 @@ class AuthController extends Controller
 
                 if ($user->profile) {
                     $user->profile->update($profileData);
+                    // Re-fetch profile after update
+                    $profile = $user->profile->fresh();
                 } else {
-                    UserProfile::create($profileData);
+                    $profile = UserProfile::create($profileData);
                 }
 
                 // Handle creator-specific data (education, professional background, achievements)
@@ -575,6 +504,14 @@ class AuthController extends Controller
                     if (!empty($creatorUpdateData)) {
                         $user->creator->update($creatorUpdateData);
                     }
+                }
+
+                // --- DYNAMIC PROFILE COMPLETENESS CALCULATION ---
+                // Re-fetch user with relationships for completeness calculation
+                $userWithRelations = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])->find($user->id);
+                if ($userWithRelations && $userWithRelations->profile) {
+                    $completeness = $userWithRelations->profile->calculateCompleteness($userWithRelations);
+                    $userWithRelations->profile->update(['profile_completeness' => $completeness]);
                 }
 
                 // Update user status to ACTIVE

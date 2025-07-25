@@ -63,6 +63,21 @@ class Ambassador extends BaseModel
     'verification_documents' => 'array',
   ];
 
+  protected static function booted()
+  {
+    parent::booted();
+    static::saved(function ($ambassador) {
+      $user = $ambassador->user()->with('profile', 'creator', 'client')->first();
+      if ($user && $user->profile) {
+        $completeness = $user->profile->calculateCompleteness($user);
+        if ($user->profile->profile_completeness !== $completeness) {
+          $user->profile->profile_completeness = $completeness;
+          $user->profile->saveQuietly();
+        }
+      }
+    });
+  }
+
   /**
    * Get the user that owns the ambassador.
    */

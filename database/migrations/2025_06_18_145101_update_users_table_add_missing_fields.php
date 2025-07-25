@@ -17,7 +17,9 @@ return new class extends Migration
             $table->string('username')->nullable()->after('email');
             $table->string('first_name')->nullable()->after('username');
             $table->string('last_name')->nullable()->after('first_name');
-            $table->string('phone_number')->nullable()->after('last_name');
+            $table->string('contact_email')->nullable()->after('last_name');
+            $table->string('contact_phone')->nullable()->after('contact_email');
+            $table->string('phone_number')->nullable()->after('contact_phone');
             $table->timestamp('date_registered')->useCurrent()->after('phone_number');
             $table->timestamp('last_login')->nullable()->after('date_registered');
             $table->enum('status', ['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED', 'DELETED'])->default('PENDING')->after('last_login');
@@ -64,6 +66,8 @@ return new class extends Migration
                 'username',
                 'first_name',
                 'last_name',
+                'contact_email',
+                'contact_phone',
                 'phone_number',
                 'date_registered',
                 'last_login',
