@@ -14,6 +14,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectUpdateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SavedProfileController;
+use App\Http\Controllers\TeamMemberController;
 
 /*
 |--------------------------------------------------------------------------
@@ -201,6 +202,20 @@ Route::middleware('auth:api')->group(
                         Route::delete('/{id}', 'deleteOne');
                         Route::patch('/{id}/application-status', 'updateApplicationStatus');
                         Route::post('/apply', 'applyForAmbassador');
+                    }
+                );
+
+                // Team members routes
+                Route::prefix('{ambassadorId}/team-members')->name('team_members.')->group(
+                    function () {
+                        Route::controller(TeamMemberController::class)->group(
+                            function () {
+                                Route::get('/', 'getByAmbassador');
+                                Route::post('/', 'addTeamMember');
+                                Route::put('/{teamMemberId}', 'updateTeamMember');
+                                Route::delete('/{teamMemberId}', 'removeTeamMember');
+                            }
+                        );
                     }
                 );
             }

@@ -38,7 +38,7 @@ class AuthController extends Controller
             }
 
             // Load user with all relationships
-            $userWithRelations = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])
+            $userWithRelations = User::with(['creator', 'client', 'ambassador.teamMembers.user.profile', 'systemAdministrator', 'profile'])
                 ->find($user->id);
 
 

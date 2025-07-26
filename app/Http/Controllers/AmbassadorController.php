@@ -30,7 +30,7 @@ class AmbassadorController extends CrudController
 
     protected function getRelations(): array
     {
-        return ['user'];
+        return ['user', 'teamMembers.user.profile'];
     }
 
     protected function afterCreateOne($model, Request $request)
@@ -47,7 +47,7 @@ class AmbassadorController extends CrudController
 
     protected function getReadAllQuery(): Builder
     {
-        return $this->model()->with('user');
+        return $this->model()->with(['user', 'teamMembers.user.profile']);
     }
 
     public function readOne($id, Request $request)
@@ -65,7 +65,7 @@ class AmbassadorController extends CrudController
                 }
             }
 
-            $item = $this->model()->with(['user.profile'])->find($id);
+            $item = $this->model()->with(['user.profile', 'teamMembers.user.profile'])->find($id);
 
             if (! $item) {
                 return response()->json(

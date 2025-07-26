@@ -18,12 +18,8 @@ class AmbassadorSeeder extends Seeder
         $ambassadors = User::where('user_type', 'AMBASSADOR')->get();
 
         foreach ($ambassadors as $ambassador) {
-            $creatorIds = User::where('user_type', 'CREATOR')->pluck('id')->toArray();
-            $max = min(count($creatorIds), 3);
-            $teamMembers = $max > 0 ? Arr::random($creatorIds, rand(1, $max)) : [];
             Ambassador::create([
                 'user_id' => $ambassador->id,
-                'team_members' => $teamMembers,
                 'team_name' => fake()->company(),
                 'specializations' => [
                     fake()->randomElement(['VIDEO', 'PHOTOGRAPHY', 'AUDIO', 'WRITING', 'DESIGN', 'OTHER']),

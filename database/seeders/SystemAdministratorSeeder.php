@@ -20,7 +20,7 @@ class SystemAdministratorSeeder extends Seeder
             SystemAdministrator::create([
                 'user_id' => $admin->id,
                 'access_level' => fake()->randomElement(['STANDARD', 'ELEVATED', 'SUPER']),
-                'admin_permissions' => json_encode([
+                'admin_permissions' => [
                     'manage_users' => fake()->boolean(),
                     'manage_projects' => fake()->boolean(),
                     'manage_media' => fake()->boolean(),
@@ -28,17 +28,17 @@ class SystemAdministratorSeeder extends Seeder
                     'manage_billing' => fake()->boolean(),
                     'manage_support' => fake()->boolean(),
                     'manage_system' => fake()->boolean()
-                ]),
-                'departments' => json_encode([
+                ],
+                'departments' => [
                     fake()->randomElement(['USERS', 'PROJECTS', 'MEDIA', 'DISTRIBUTION', 'BILLING', 'SUPPORT', 'SYSTEM'])
-                ]),
+                ],
                 'audit_log' => true,
                 'last_permission_update' => now()->subDays(rand(1, 365)),
                 'restricted_ip_access' => fake()->boolean(),
-                'allowed_ip_addresses' => json_encode([
+                'allowed_ip_addresses' => [
                     fake()->ipv4(),
                     fake()->ipv4()
-                ]),
+                ],
                 'emergency_contact' => fake()->phoneNumber(),
                 'security_clearance' => fake()->randomElement(['BASIC', 'SENSITIVE', 'CONFIDENTIAL'])
             ]);

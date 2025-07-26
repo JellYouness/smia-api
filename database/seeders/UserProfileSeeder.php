@@ -50,7 +50,7 @@ class UserProfileSeeder extends Seeder
                     ]
                 ],
                 'audio_introduction' => null,
-                'preferred_language' => 'UTC',
+                'preferred_language' => 'en',
                 'timezone' => 'UTC'
             ]);
         }

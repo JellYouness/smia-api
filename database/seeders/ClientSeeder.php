@@ -32,13 +32,23 @@ class ClientSeeder extends Seeder
                     'billing_country' => fake()->country(),
                     'tax_identifier' => fake()->numerify('VAT-#######'),
                     'budget' => fake()->randomElement(['SMALL', 'MEDIUM', 'LARGE', 'ENTERPRISE']),
-                    'preferred_creators' => json_encode([]),
+                    'preferred_creators' => [],
+                    'languages' => [
+                        [
+                            'language' => fake()->randomElement(['ENGLISH', 'FRENCH', 'SPANISH', 'GERMAN', 'ITALIAN']),
+                            'proficiency' => fake()->randomElement(['BASIC', 'INTERMEDIATE', 'FLUENT', 'NATIVE'])
+                        ],
+                        [
+                            'language' => fake()->randomElement(['ENGLISH', 'FRENCH', 'SPANISH', 'GERMAN', 'ITALIAN']),
+                            'proficiency' => fake()->randomElement(['BASIC', 'INTERMEDIATE', 'FLUENT', 'NATIVE'])
+                        ]
+                    ],
                     'project_count' => 0,
-                    'default_project_settings' => json_encode([
+                    'default_project_settings' => [
                         'timeline' => 'standard',
                         'communication_preference' => 'email',
                         'notification_frequency' => 'daily'
-                    ])
+                    ]
                 ]
             );
         }
