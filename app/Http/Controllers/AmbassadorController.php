@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\ApplicationStatusNotification;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
 
 class AmbassadorController extends CrudController
 {
@@ -91,6 +94,63 @@ class AmbassadorController extends CrudController
         }
     }
 
+    public function patchOne($id, Request $request)
+    {
+        try {
+            return DB::transaction(
+                function () use ($id, $request) {
+                    if (in_array('update', $this->restricted)) {
+                        $user = $request->user();
+                        if (! $user->hasPermission($this->getTable(), 'update', $id) && ! $user->hasPermission('users', 'update', $user->id)) {
+                            return response()->json(
+                                [
+                                    'success' => false,
+                                    'errors' => [__('common.permission_denied')],
+                                ]
+                            );
+                        }
+                    }
+                    $model = $this->model()->find($id);
+
+                    if (! $model) {
+                        return response()->json(
+                            [
+                                'success' => false,
+                                'errors' => [__($this->getTable() . '.not_found')],
+                            ]
+                        );
+                    }
+
+                    $rules = app($this->getModelClass())->rules($id);
+                    $fields = array_keys($request->all());
+                    $validated = $request->validate(Arr::only($rules, $fields));
+
+                    $model->update($validated);
+
+                    if (method_exists($this, 'afterPatchOne')) {
+                        $this->afterPatchOne($model, $request);
+                    }
+
+                    return response()->json(
+                        [
+                            'success' => true,
+                            'data' => ['item' => $model],
+                            'validated' => $validated,
+                            'message' => __($this->getTable() . '.updated'),
+                        ]
+                    );
+                }
+            );
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'errors' => Arr::flatten($e->errors())]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function CrudController.patchOne: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
     public function updateApplicationStatus($id, Request $request)
     {
         try {
@@ -164,5 +224,32 @@ class AmbassadorController extends CrudController
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
+    }
+
+    // apply for ambassador
+    public function applyForAmbassador(Request $request)
+    {
+        $request->validate([
+            'team_name' => 'required|string|max:255',
+            'team_description' => 'required|string|max:1000',
+            'specializations' => 'required|array',
+            'service_offerings' => 'required|array',
+            'years_in_business' => 'required|integer|min:0|max:50',
+            'business_street' => 'required|string|max:255',
+            'business_city' => 'required|string|max:255',
+            'business_state' => 'required|string|max:255',
+            'business_country' => 'required|string|max:255',
+            'business_postal_code' => 'required|string|max:255',
+            'team_members' => 'required|array',
+            'regional_expertise' => 'required|array',
+        ]);
+
+        $user = $request->user();
+        $user->ambassador()->create($request->all());
+
+        return response()->json([
+            'success' => true,
+            'data' => ['item' => $user->ambassador],
+        ]);
     }
 }
