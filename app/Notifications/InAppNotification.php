@@ -199,6 +199,34 @@ class InAppNotification extends Notification implements ShouldQueue
             }
             return $msg;
         }
+        if ($this->type === NotificationType::TEAM_INVITATION_ACCEPTED) {
+            $userName = $this->data['user_name'] ?? '';
+            $teamName = $this->data['team_name'] ?? '';
+            $role = $this->data['role'] ?? '';
+            $msg = 'Team invitation accepted';
+            if ($userName) {
+                $msg .= ' by ' . $userName;
+            }
+            if ($teamName) {
+                $msg .= ' for team: ' . $teamName;
+            }
+            if ($role) {
+                $msg .= ' (Role: ' . $role . ')';
+            }
+            return $msg;
+        }
+        if ($this->type === NotificationType::TEAM_INVITATION_DECLINED) {
+            $userName = $this->data['user_name'] ?? '';
+            $teamName = $this->data['team_name'] ?? '';
+            $msg = 'Team invitation declined';
+            if ($userName) {
+                $msg .= ' by ' . $userName;
+            }
+            if ($teamName) {
+                $msg .= ' for team: ' . $teamName;
+            }
+            return $msg;
+        }
         return $this->data['message'] ?? match ($this->type) {
             NotificationType::PROJECT_INVITE => 'You have been invited to join a project.',
             NotificationType::PROJECT_UPDATE => 'A project you are involved with has been updated.',
@@ -219,6 +247,8 @@ class InAppNotification extends Notification implements ShouldQueue
             NotificationType::WELCOME => 'Welcome to SMIA! We are excited to have you on board.',
             NotificationType::REMINDER => 'This is a reminder for an upcoming event.',
             NotificationType::SECURITY_ALERT => 'There is a security alert for your account.',
+            NotificationType::TEAM_INVITATION_ACCEPTED => 'A team member has accepted your invitation.',
+            NotificationType::TEAM_INVITATION_DECLINED => 'A team member has declined your invitation.',
         };
     }
 
@@ -251,6 +281,8 @@ class InAppNotification extends Notification implements ShouldQueue
             NotificationType::NEW_PROPOSAL => $baseUrl . '/proposals/' . ($this->data['proposal_id'] ?? ''),
             NotificationType::NEW_PROPOSAL_COMMENT => $baseUrl . '/proposals/' . ($this->data['proposal_id'] ?? ''),
             NotificationType::NEW_PROJECT_UPDATE => $baseUrl . '/projects/' . ($this->data['project_id'] ?? ''),
+            NotificationType::TEAM_INVITATION_ACCEPTED => $baseUrl . '/admin/ambassadors',
+            NotificationType::TEAM_INVITATION_DECLINED => $baseUrl . '/admin/ambassadors',
         };
     }
 }

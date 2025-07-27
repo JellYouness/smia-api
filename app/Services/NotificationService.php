@@ -16,23 +16,36 @@ class NotificationService
         array $data,
         array $channels = ['in_app']
     ): void {
+        // Load user profile if not already loaded
+        if (!$user->relationLoaded('profile')) {
+            $user->load('profile');
+        }
+
+        // Get notification preferences with defaults
+        $preferences = $user->profile?->notification_preferences ?? [
+            'in_app' => true,
+            'email' => true,
+            'sms' => false,
+            'push' => false,
+        ];
+
         // Create in-app notification
-        if (in_array('in_app', $channels) && $user->profile->notification_preferences['in_app']) {
+        if (in_array('in_app', $channels) && ($preferences['in_app'] ?? true)) {
             $this->createInAppNotification($user, $type, $data);
         }
 
         // Send email notification
-        if (in_array('email', $channels) && $user->profile->notification_preferences['email']) {
+        if (in_array('email', $channels) && ($preferences['email'] ?? true)) {
             $this->sendEmailNotification($user, $type, $data);
         }
 
         // Send SMS notification
-        if (in_array('sms', $channels) && $user->profile->notification_preferences['sms']) {
+        if (in_array('sms', $channels) && ($preferences['sms'] ?? false)) {
             $this->sendSmsNotification($user, $type, $data);
         }
 
         // Send push notification
-        if (in_array('push', $channels) && $user->profile->notification_preferences['push']) {
+        if (in_array('push', $channels) && ($preferences['push'] ?? false)) {
             $this->sendPushNotification($user, $type, $data);
         }
     }
@@ -98,6 +111,8 @@ class NotificationService
             NotificationType::WELCOME => 'Welcome',
             NotificationType::REMINDER => 'Reminder',
             NotificationType::SECURITY_ALERT => 'Security Alert',
+            NotificationType::TEAM_INVITATION_ACCEPTED => 'Team Invitation Accepted',
+            NotificationType::TEAM_INVITATION_DECLINED => 'Team Invitation Declined',
         };
     }
 
@@ -123,6 +138,8 @@ class NotificationService
             NotificationType::WELCOME => 'celebration',
             NotificationType::REMINDER => 'schedule',
             NotificationType::SECURITY_ALERT => 'security',
+            NotificationType::TEAM_INVITATION_ACCEPTED => 'check_circle',
+            NotificationType::TEAM_INVITATION_DECLINED => 'cancel',
         };
     }
 }

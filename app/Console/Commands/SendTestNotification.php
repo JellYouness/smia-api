@@ -62,6 +62,23 @@ class SendTestNotification extends Command
             'test' => true,
         ];
 
+        // Add specific data for team invitation notifications
+        if ($notificationType === NotificationType::TEAM_INVITATION_ACCEPTED) {
+            $data = array_merge($data, [
+                'user_name' => 'Test User',
+                'team_name' => 'Test Team',
+                'role' => 'Member',
+                'is_primary' => false,
+            ]);
+        } elseif ($notificationType === NotificationType::TEAM_INVITATION_DECLINED) {
+            $data = array_merge($data, [
+                'user_name' => 'Test User',
+                'team_name' => 'Test Team',
+                'role' => 'Member',
+                'is_primary' => false,
+            ]);
+        }
+
         // Send notification
         try {
             $this->notificationService->send($user, $notificationType, $data, ['in_app', 'email']);

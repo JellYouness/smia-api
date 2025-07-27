@@ -87,6 +87,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/saved-profiles/{creatorId}', [SavedProfileController::class, 'show']);
 });
 
+// Team member invitation routes (public)
+Route::prefix('team-invitations')->name('team_invitations.')->group(
+    function () {
+        Route::controller(TeamMemberController::class)->group(
+            function () {
+                Route::get('/{token}', 'getInvitationByToken');
+                Route::post('/{token}/accept', 'acceptInvitation');
+                Route::post('/{token}/decline', 'declineInvitation');
+            }
+        );
+    }
+);
+
 // Public projects route (no auth required)
 Route::get('projects/public', [\App\Http\Controllers\ProjectController::class, 'readAllPublicProjects']);
 
@@ -214,6 +227,7 @@ Route::middleware('auth:api')->group(
                                 Route::post('/', 'addTeamMember');
                                 Route::put('/{teamMemberId}', 'updateTeamMember');
                                 Route::delete('/{teamMemberId}', 'removeTeamMember');
+                                Route::get('/invitations/pending', 'getPendingInvitations');
                             }
                         );
                     }

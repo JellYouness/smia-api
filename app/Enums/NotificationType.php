@@ -28,4 +28,6 @@ enum NotificationType: string
     case NEW_PROPOSAL = 'new_proposal';
     case NEW_PROPOSAL_COMMENT = 'new_proposal_comment';
     case NEW_PROJECT_UPDATE = 'new_project_update';
+    case TEAM_INVITATION_ACCEPTED = 'team_invitation_accepted';
+    case TEAM_INVITATION_DECLINED = 'team_invitation_declined';
 }
