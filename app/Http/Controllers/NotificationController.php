@@ -69,6 +69,9 @@ class NotificationController extends Controller
         $notification = $user->notifications()->findOrFail($id);
         $notification->markAsRead();
 
+        // Broadcast the notification read event
+        broadcast(new \App\Events\NotificationRead($notification, $user));
+
         return response()->json([
             'success' => true,
             'message' => 'Notification marked as read',
@@ -90,7 +93,11 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         $notification = $user->notifications()->findOrFail($id);
+        $notificationId = $notification->id;
         $notification->delete();
+
+        // Broadcast the notification deleted event
+        broadcast(new \App\Events\NotificationDeleted($notificationId, $user));
 
         return response()->json([
             'success' => true,

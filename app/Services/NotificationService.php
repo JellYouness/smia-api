@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\NotificationType;
-use Illuminate\Notifications\DatabaseNotification;
+use App\Models\Notification;
 use App\Models\User;
 use App\Notifications\InAppNotification;
 use Illuminate\Support\Str;
@@ -63,13 +63,16 @@ class NotificationService
 
     private function createInAppNotification(User $user, NotificationType $type, array $data): void
     {
-        DatabaseNotification::create([
+        $notification = Notification::create([
             'id' => Str::uuid(),
             'type' => $type,
             'notifiable_type' => User::class,
             'notifiable_id' => $user->id,
             'data' => $data,
         ]);
+
+        // Broadcast the notification to the user
+        broadcast(new \App\Events\NotificationReceived($notification, $user));
     }
 
     private function sendEmailNotification(User $user, NotificationType $type, array $data): void
