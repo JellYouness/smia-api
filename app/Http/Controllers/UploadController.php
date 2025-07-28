@@ -38,8 +38,8 @@ class UploadController extends CrudController
             $file = $request->file('file');
             $extension = $file->getClientOriginalExtension();
             $filename = time().'-'.Str::uuid().'.'.$extension;
-            Storage::disk('cloud')->put($filename, $file->get());
-            $path = "/cloud/$filename";
+            Storage::disk('public')->put($filename, $file->get());
+            $path = "/storage/$filename";
             $request->merge([
                 'path' => $path,
                 'size' => $file->getSize(),
@@ -61,15 +61,15 @@ class UploadController extends CrudController
 
             $currentPath = $this->model()->find($id)->path;
             if ($currentPath) {
-                $currentPath = str_replace('/cloud', '', $currentPath);
-                Storage::disk('cloud')->delete($currentPath);
+                $currentPath = str_replace('/storage', '', $currentPath);
+                Storage::disk('public')->delete($currentPath);
             }
 
             $file = $request->file('file');
             $extension = $file->getClientOriginalExtension();
             $filename = time().'-'.Str::uuid().'.'.$extension;
-            Storage::disk('cloud')->put($filename, $file->get());
-            $path = "/cloud/$filename";
+            Storage::disk('public')->put($filename, $file->get());
+            $path = "/storage/$filename";
             $request->merge([
                 'path' => $path,
                 'size' => $file->getSize(),
@@ -156,8 +156,8 @@ class UploadController extends CrudController
                     ], 404
                 );
             }
-            $path = str_replace('/cloud', '', $upload->path);
-            if (! Storage::disk('cloud')->exists($path)) {
+            $path = str_replace('/storage', '', $upload->path);
+            if (! Storage::disk('public')->exists($path)) {
                 return response()->json(
                     [
                         'success' => false,
@@ -166,7 +166,7 @@ class UploadController extends CrudController
                 );
             }
 
-            return Storage::disk('cloud')->response($path);
+            return Storage::disk('public')->response($path);
         } catch (\Exception $e) {
             Log::error('Error caught in function UploadController.readImage : '.$e->getMessage());
             Log::error($e->getTraceAsString());
