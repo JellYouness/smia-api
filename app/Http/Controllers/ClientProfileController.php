@@ -207,7 +207,7 @@ class ClientProfileController extends Controller
             ]);
 
             $user->client->update([
-                'languages' => json_encode($validated['languages']),
+                'languages' => $validated['languages'],
             ]);
 
             return response()->json([

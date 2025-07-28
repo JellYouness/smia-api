@@ -128,7 +128,7 @@ class UserController extends CrudController
                 ]);
             }
             $user->creator->update([
-                'portfolio' => json_encode($request->portfolio)
+                'portfolio' => $request->portfolio
             ]);
 
             return response()->json([
@@ -155,7 +155,7 @@ class UserController extends CrudController
                 ]);
             }
             $user->creator->update([
-                'skills' => json_encode($request->skills)
+                'skills' => $request->skills
             ]);
 
             return response()->json([
@@ -182,7 +182,7 @@ class UserController extends CrudController
                 ]);
             }
             $user->creator->update([
-                'certifications' => json_encode($request->certifications)
+                'certifications' => $request->certifications
             ]);
 
             return response()->json([
@@ -209,7 +209,7 @@ class UserController extends CrudController
                 ]);
             }
             $user->creator->update([
-                'professional_background' => json_encode($request->professional_background)
+                'professional_background' => $request->professional_background
             ]);
 
             return response()->json([
@@ -236,7 +236,7 @@ class UserController extends CrudController
                 ]);
             }
             $user->creator->update([
-                'achievements' => json_encode($request->achievements)
+                'achievements' => $request->achievements
             ]);
 
             return response()->json([
@@ -263,7 +263,7 @@ class UserController extends CrudController
                 ]);
             }
             $user->creator->update([
-                'equipment_info' => json_encode($request->equipment_info)
+                'equipment_info' => $request->equipment_info
             ]);
 
             return response()->json([
@@ -290,7 +290,7 @@ class UserController extends CrudController
                 ]);
             }
             $user->creator->update([
-                'regional_expertise' => json_encode($request->regional_expertise)
+                'regional_expertise' => $request->regional_expertise
             ]);
 
             Log::info('Regional expertise updated successfully', ['regionalExpertise' => $request->regional_expertise]);
@@ -320,7 +320,7 @@ class UserController extends CrudController
                 ]);
             }
             $user->creator->update([
-                'media_types' => json_encode($request->media_types)
+                'media_types' => $request->media_types
             ]);
 
             return response()->json([
@@ -352,7 +352,7 @@ class UserController extends CrudController
                 'languages.*.proficiency' => 'required|string',
             ]);
             $user->creator->update([
-                'languages' => json_encode($validated['languages'])
+                'languages' => $validated['languages']
             ]);
 
             return response()->json([
@@ -383,7 +383,7 @@ class UserController extends CrudController
                 ]);
             }
             $user->creator->update([
-                'education' => json_encode($request->education)
+                'education' => $request->education
             ]);
 
             return response()->json([
