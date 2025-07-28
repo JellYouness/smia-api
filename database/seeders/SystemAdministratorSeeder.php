@@ -14,7 +14,7 @@ class SystemAdministratorSeeder extends Seeder
     public function run(): void
     {
         // Get all users with type SYSTEM_ADMINISTRATOR
-        $admins = User::where('user_type', 'SYSTEM_ADMINISTRATOR')->get();
+        $admins = User::where('user_type', 'ADMIN')->get();
 
         foreach ($admins as $admin) {
             SystemAdministrator::create([

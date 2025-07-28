@@ -15,6 +15,7 @@ use App\Http\Controllers\ProjectUpdateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SavedProfileController;
 use App\Http\Controllers\TeamMemberController;
+use App\Http\Controllers\AdminDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -246,6 +247,17 @@ Route::middleware('auth:api')->group(
                         Route::put('/{id}', 'updateOne');
                         Route::patch('/{id}', 'patchOne');
                         Route::delete('/{id}', 'deleteOne');
+                    }
+                );
+            }
+        );
+
+        // Admin Dashboard routes
+        Route::prefix('admin')->name('admin.')->group(
+            function () {
+                Route::controller(AdminDashboardController::class)->group(
+                    function () {
+                        Route::get('/dashboard/stats', 'getDashboardStats');
                     }
                 );
             }
