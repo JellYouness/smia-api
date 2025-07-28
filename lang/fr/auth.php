@@ -33,6 +33,7 @@ return [
     'disconnected' => 'Vous êtes déconnecté.',
     'user_not_found' => 'Utilisateur non trouvé.',
     'email_already_verified' => 'Email déjà vérifié.',
+    'email_not_verified' => 'L\'email doit être vérifié avant de compléter le profil.',
     'invalid_verification_link' => 'Lien de vérification invalide.',
     'email_verified_success' => 'Email vérifié avec succès.',
     'verification_email_resent' => 'L\'email de vérification a été renvoyé avec succès.',
