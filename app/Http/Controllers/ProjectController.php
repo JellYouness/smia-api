@@ -488,6 +488,7 @@ class ProjectController extends CrudController
             ) {
                 return response()->json(['success' => false, 'errors' => [__('common.permission_denied')]]);
             }
+
             $query = ProjectProposal::with([
                 'creator:id,user_id',
                 'creator.user:id,first_name,last_name',
@@ -495,17 +496,32 @@ class ProjectController extends CrudController
                 'project:id,title,budget,status,start_date,end_date',
             ])->where('project_id', $projectId)
                 ->orderByDesc('created_at');
+
+            // Filter by proposal status
+            $filters = $request->input('filters', []);
+            foreach ($filters as $filter) {
+                $filter = is_string($filter) ? json_decode($filter, true) : $filter;
+                if (isset($filter['filterColumn'], $filter['filterOperator'], $filter['filterValue'])) {
+                    if ($filter['filterColumn'] === 'status' && $filter['filterOperator'] === 'equals') {
+                        $query->where('status', $filter['filterValue']);
+                    }
+                }
+            }
+
             $perPage = $request->input('per_page', 50);
+
             if ($perPage === 'all') {
                 $proposals = $query->get();
                 $meta = ['current_page' => 1, 'last_page' => 1, 'total_items' => $proposals->count()];
             } else {
+
                 $proposals = $query->paginate($perPage);
                 $meta = [
                     'current_page' => $proposals->currentPage(),
                     'last_page' => $proposals->lastPage(),
                     'total_items' => $proposals->total(),
                 ];
+
                 $proposals = $proposals->items();
             }
 
