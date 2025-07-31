@@ -1,21 +1,21 @@
 <?php
 
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AmbassadorController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\UploadController;
-use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\CreatorController;
-use App\Http\Controllers\AmbassadorController;
 use App\Http\Controllers\MediaPostController;
-use App\Http\Controllers\SystemAdministratorController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectUpdateController;
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SavedProfileController;
+use App\Http\Controllers\SystemAdministratorController;
 use App\Http\Controllers\TeamMemberController;
-use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\UploadController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -272,6 +272,7 @@ Route::middleware('auth:api')->group(
                         Route::get('/{id}', 'readOne');
                         Route::put('/{id}', 'updateOne');
                         Route::delete('/{id}', 'deleteOne');
+                        Route::patch('/{id}', 'patchOne');
 
                         Route::get('/creator/{creatorId}', 'readAllByCreator');
                         Route::get('/client/{clientId}', 'readAllByClient');
@@ -332,6 +333,7 @@ Route::middleware('auth:api')->group(
                         Route::post('/{id}', 'updateOne');
                         Route::delete('/{id}', 'deleteOne');
                         Route::delete('/', 'deleteMulti');
+                        Route::get('/download/{id}', 'downloadFile');
                     }
                 );
             }
