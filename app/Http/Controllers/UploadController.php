@@ -153,7 +153,8 @@ class UploadController extends CrudController
                     [
                         'success' => false,
                         'errors' => [__('uploads.not_found')],
-                    ], 404
+                    ],
+                    404
                 );
             }
             $path = str_replace('/storage', '', $upload->path);
@@ -162,7 +163,8 @@ class UploadController extends CrudController
                     [
                         'success' => false,
                         'errors' => [__('uploads.not_found')],
-                    ], 404
+                    ],
+                    404
                 );
             }
 
@@ -172,6 +174,40 @@ class UploadController extends CrudController
             Log::error($e->getTraceAsString());
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    /**
+     * Download a file by its upload ID, forcing browser download.
+     */
+    public function downloadFile($id)
+    {
+        try {
+            $upload = $this->model()->find($id);
+            if (! $upload) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => [__('uploads.not_found')],
+                ], 404);
+            }
+            $path = str_replace('/storage', '', $upload->path);
+            if (! \Storage::disk('public')->exists($path)) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => [__('uploads.not_found')],
+                ], 404);
+            }
+            $fullPath = storage_path('app/public/'.$path);
+
+            return response()->download($fullPath, $upload->name);
+        } catch (\Exception $e) {
+            \Log::error('Error caught in function UploadController.downloadFile : '.$e->getMessage());
+            \Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'errors' => [__('common.unexpected_error')],
+            ]);
         }
     }
 }
