@@ -47,6 +47,7 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
         'two_factor_secret',
         'google_id',
         'facebook_id',
+        'color',
     ];
 
     /**
@@ -83,14 +84,20 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
         parent::booted();
         static::created(
             function ($user) {
-                $user->givePermission('users.' . $user->id . '.read');
-                $user->givePermission('users.' . $user->id . '.update');
-                $user->givePermission('users.' . $user->id . '.delete');
+                // Generate color for new users
+                if (empty($user->color)) {
+                    $user->color = $user->generateColor();
+                    $user->saveQuietly();
+                }
+
+                $user->givePermission('users.'.$user->id.'.read');
+                $user->givePermission('users.'.$user->id.'.update');
+                $user->givePermission('users.'.$user->id.'.delete');
             }
         );
         static::deleted(
             function ($user) {
-                $permissions = Permission::where('name', 'like', 'users.' . $user->id . '.%')->get();
+                $permissions = Permission::where('name', 'like', 'users.'.$user->id.'.%')->get();
                 DB::table('users_permissions')->whereIn('permission_id', $permissions->pluck('id'))->delete();
                 Permission::destroy($permissions->pluck('id'));
             }
@@ -104,16 +111,16 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
 
     public function hasPermission($entityName, $action, $entityId = null)
     {
-        $permissionName = $entityName . ".$action";
+        $permissionName = $entityName.".$action";
         if ($this->hasPermissionName($permissionName)) {
             return true;
         }
-        $permissionName = $entityName . '.*';
+        $permissionName = $entityName.'.*';
         if ($this->hasPermissionName($permissionName)) {
             return true;
         }
         if ($entityId !== null) {
-            $permissionName = $entityName . ".$entityId.$action";
+            $permissionName = $entityName.".$entityId.$action";
             if ($this->hasPermissionName($permissionName)) {
                 return true;
             }
@@ -133,7 +140,7 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
 
     public function removeAllPermissions($entityName, $entityId)
     {
-        $ids = $this->permissions()->where('name', 'like', $entityName . '.' . $entityId . '.%')->pluck('permissions.id');
+        $ids = $this->permissions()->where('name', 'like', $entityName.'.'.$entityId.'.%')->pluck('permissions.id');
         $this->permissions()->detach($ids);
     }
 
@@ -167,12 +174,12 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
 
     public function rolesTableReadPermissions(string $table)
     {
-        return $this->hasManyDeepFromRelations($this->roles(), (new Role)->permissions())->where('permissions.name', 'like', $table . '%read');
+        return $this->hasManyDeepFromRelations($this->roles(), (new Role)->permissions())->where('permissions.name', 'like', $table.'%read');
     }
 
     public function allTableReadPermissions(string $table)
     {
-        return $this->permissions()->select('permissions.id', 'permissions.name')->where('permissions.name', 'like', $table . '%read')->union($this->rolesTableReadPermissions($table)->select('permissions.id', 'permissions.name', 'permissions.id as pivot_permission_id', 'users_roles.user_id as pivot_user_id'));
+        return $this->permissions()->select('permissions.id', 'permissions.name')->where('permissions.name', 'like', $table.'%read')->union($this->rolesTableReadPermissions($table)->select('permissions.id', 'permissions.name', 'permissions.id as pivot_permission_id', 'users_roles.user_id as pivot_user_id'));
     }
 
     public function hasRole(ROLE_ENUM $role): bool
@@ -258,7 +265,7 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
             'password' => 'required|string',
         ];
         if ($id !== null) {
-            $rules['email'] .= ',' . $id;
+            $rules['email'] .= ','.$id;
             $rules['password'] = 'nullable|string';
         }
 
@@ -324,6 +331,50 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
                 $query->where('created_at', '>', \DB::raw('conversation_participants.last_read_at'));
             })
             ->count();
+    }
+
+    public function generateColor(): string
+    {
+        $firstName = $this->first_name ?? '';
+        $lastName = $this->last_name ?? '';
+
+        $initials = strtoupper(substr($firstName, 0, 1).substr($lastName, 0, 1));
+
+        if (empty($initials)) {
+            $initials = strtoupper(substr($this->email ?? '', 0, 2));
+        }
+
+        // Generate a hash from initials to get consistent colors
+        $hash = crc32($initials);
+
+        // Predefined colors that work well with white text
+        $colors = [
+            '#1f2937', // Dark gray
+            '#374151', // Medium gray
+            '#059669', // Emerald
+            '#047857', // Dark emerald
+            '#0d9488', // Teal
+            '#0891b2', // Cyan
+            '#0ea5e9', // Sky blue
+            '#3b82f6', // Blue
+            '#6366f1', // Indigo
+            '#7c3aed', // Violet
+            '#8b5cf6', // Purple
+            '#a855f7', // Purple
+            '#ec4899', // Pink
+            '#f43f5e', // Rose
+            '#ef4444', // Red
+            '#f97316', // Orange
+            '#f59e0b', // Amber
+            '#eab308', // Yellow
+            '#84cc16', // Lime
+            '#22c55e', // Green
+        ];
+
+        // Use hash to select a color
+        $colorIndex = $hash % count($colors);
+
+        return $colors[$colorIndex];
     }
 
     // Accessor methods for firstName and lastName
