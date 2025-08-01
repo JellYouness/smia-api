@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -27,6 +27,7 @@ return new class extends Migration
             $table->boolean('two_factor_enabled')->default(false)->after('user_type');
             $table->boolean('accepted_terms')->default(false)->after('two_factor_enabled');
             $table->boolean('email_verified')->default(false)->after('accepted_terms');
+            $table->string('color', 7)->nullable()->after('email_verified');
         });
 
         // Generate usernames for existing users
@@ -38,7 +39,7 @@ return new class extends Migration
 
             // Ensure username uniqueness
             while (DB::table('users')->where('username', $username)->exists()) {
-                $username = $baseUsername . $counter;
+                $username = $baseUsername.$counter;
                 $counter++;
             }
 
@@ -76,6 +77,7 @@ return new class extends Migration
                 'two_factor_enabled',
                 'accepted_terms',
                 'email_verified',
+                'color',
             ]);
         });
     }
