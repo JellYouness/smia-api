@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ambassador;
+use App\Models\Creator;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
@@ -65,7 +66,7 @@ class AmbassadorController extends CrudController
                 }
             }
 
-            $item = $this->model()->with(['user.profile', 'teamMembers.user.profile'])->find($id);
+            $item = $this->model()->with(['user.profile', 'teamMembers.user.profile', 'user.creator', 'user.ambassador'])->find($id);
 
             if (! $item) {
                 return response()->json(
