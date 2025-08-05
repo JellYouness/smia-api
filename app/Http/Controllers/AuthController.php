@@ -538,4 +538,207 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         }
     }
+
+    public function completeCreatorProfile(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'errors' => [__('auth.user_not_found')]]);
+            }
+
+            // Check if user is a creator
+            if (!$user->creator) {
+                return response()->json(['success' => false, 'errors' => [__('auth.not_creator')]]);
+            }
+
+            return DB::transaction(function () use ($request, $user) {
+                // Validate creator profile data
+                $creatorValidationRules = [
+                    'title' => 'nullable|string|max:255',
+                    'bio' => 'nullable|string|max:1000',
+                    'short_bio' => 'nullable|string|max:255',
+                    'hourly_rate' => 'nullable|numeric|min:0',
+                    'skills' => 'nullable|array',
+                    'skills.*' => 'string|max:255',
+                    'portfolio' => 'nullable|array',
+                    'portfolio.*.title' => 'required|string|max:255',
+                    'portfolio.*.description' => 'required|string|max:1000',
+                    'portfolio.*.url' => 'required|url|max:255',
+                    'professional_background' => 'nullable|array',
+                    'professional_background.*.title' => 'required|string|max:255',
+                    'professional_background.*.company' => 'required|string|max:255',
+                    'professional_background.*.duration' => 'required|string|max:100',
+                    'professional_background.*.description' => 'required|string|max:1000',
+                    'certifications' => 'nullable|array',
+                    'certifications.*.name' => 'required|string|max:255',
+                    'certifications.*.issuer' => 'required|string|max:255',
+                    'certifications.*.year' => 'required|string|max:10',
+                    'certifications.*.url' => 'nullable|url|max:255',
+                    'achievements' => 'nullable|array',
+                    'achievements.*' => 'string|max:255',
+                    'equipment_info' => 'nullable|array',
+                    'equipment_info.cameras' => 'nullable|array',
+                    'equipment_info.lenses' => 'nullable|array',
+                    'equipment_info.audio' => 'nullable|array',
+                    'equipment_info.lighting' => 'nullable|array',
+                    'regional_expertise' => 'nullable|array',
+                    'regional_expertise.*.region' => 'required|string|max:255',
+                    'media_types' => 'nullable|array',
+                    'media_types.*' => 'string|in:PHOTO,VIDEO,ARTICLE,AUDIO,DESIGN,OTHER',
+                    'availability' => 'required|string|in:AVAILABLE,LIMITED,UNAVAILABLE,BUSY',
+                    'preferred_project_types' => 'nullable|array',
+                    'preferred_project_types.*' => 'string|max:255',
+                    'preferred_budget_range' => 'nullable|string|max:255',
+                    'preferred_timeline' => 'nullable|string|max:255',
+                ];
+
+                $validatedCreatorData = $request->validate($creatorValidationRules);
+
+                // Update creator profile
+                $creatorUpdateData = [
+                    'title' => $validatedCreatorData['title'] ?? null,
+                    'bio' => $validatedCreatorData['bio'] ?? null,
+                    'short_bio' => $validatedCreatorData['short_bio'] ?? null,
+                    'hourly_rate' => $validatedCreatorData['hourly_rate'] ?? null,
+                    'skills' => $validatedCreatorData['skills'] ?? [],
+                    'portfolio' => $validatedCreatorData['portfolio'] ?? [],
+                    'professional_background' => $validatedCreatorData['professional_background'] ?? [],
+                    'certifications' => $validatedCreatorData['certifications'] ?? [],
+                    'achievements' => $validatedCreatorData['achievements'] ?? [],
+                    'equipment_info' => $validatedCreatorData['equipment_info'] ?? null,
+                    'regional_expertise' => $validatedCreatorData['regional_expertise'] ?? [],
+                    'media_types' => $validatedCreatorData['media_types'] ?? [],
+                    'availability' => $validatedCreatorData['availability'],
+                    'preferred_project_types' => $validatedCreatorData['preferred_project_types'] ?? [],
+                    'preferred_budget_range' => $validatedCreatorData['preferred_budget_range'] ?? null,
+                    'preferred_timeline' => $validatedCreatorData['preferred_timeline'] ?? null,
+                ];
+
+                // Remove null values
+                $creatorUpdateData = array_filter($creatorUpdateData, function ($value) {
+                    return $value !== null;
+                });
+
+                $user->creator->update($creatorUpdateData);
+
+                // Mark creator profile as complete
+                $user->creator->update(['is_profile_complete' => true]);
+
+                // Re-fetch user with relationships
+                $updatedUser = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])
+                    ->find($user->id);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => __('creator.creator_profile_completed_successfully'),
+                    'data' => [
+                        'user' => $updatedUser,
+                    ],
+                ]);
+            });
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'errors' => $e->errors()]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function AuthController.completeCreatorProfile: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function completeClientProfile(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'errors' => [__('auth.user_not_found')]]);
+            }
+
+            // Check if user is a client
+            if (!$user->client) {
+                return response()->json(['success' => false, 'errors' => [__('auth.not_client')]]);
+            }
+
+            return DB::transaction(function () use ($request, $user) {
+                // Validate client profile data
+                $clientValidationRules = [
+                    'company_name' => 'required|string|max:255',
+                    'company_size' => 'required|string|max:100',
+                    'industry' => 'required|string|max:255',
+                    'website_url' => 'nullable|url|max:255',
+                    'budget' => 'required|string|max:100',
+                    'project_count' => 'required|integer|min:0',
+                    'billing_street' => 'nullable|string|max:255',
+                    'billing_city' => 'nullable|string|max:255',
+                    'billing_state' => 'nullable|string|max:255',
+                    'billing_postal_code' => 'nullable|string|max:20',
+                    'billing_country' => 'nullable|string|max:100',
+                    'tax_identifier' => 'nullable|string|max:255',
+                    'preferred_creators' => 'nullable|array',
+                    'preferred_creators.*' => 'integer|exists:users,id',
+                    'default_project_settings' => 'nullable|array',
+                    'default_project_settings.timeline' => 'nullable|string|max:255',
+                    'default_project_settings.notification_frequency' => 'nullable|integer|min:1',
+                    'default_project_settings.communication_preference' => 'nullable|string|max:100',
+                    'preferred_project_types' => 'nullable|array',
+                    'preferred_project_types.*' => 'string|max:255',
+                    'preferred_budget_range' => 'nullable|string|max:255',
+                    'preferred_timeline' => 'nullable|string|max:255',
+                ];
+
+                $validatedClientData = $request->validate($clientValidationRules);
+
+                // Update client profile
+                $clientUpdateData = [
+                    'company_name' => $validatedClientData['company_name'],
+                    'company_size' => $validatedClientData['company_size'],
+                    'industry' => $validatedClientData['industry'],
+                    'website_url' => $validatedClientData['website_url'] ?? null,
+                    'budget' => $validatedClientData['budget'],
+                    'project_count' => $validatedClientData['project_count'],
+                    'billing_street' => $validatedClientData['billing_street'] ?? null,
+                    'billing_city' => $validatedClientData['billing_city'] ?? null,
+                    'billing_state' => $validatedClientData['billing_state'] ?? null,
+                    'billing_postal_code' => $validatedClientData['billing_postal_code'] ?? null,
+                    'billing_country' => $validatedClientData['billing_country'] ?? null,
+                    'tax_identifier' => $validatedClientData['tax_identifier'] ?? null,
+                    'preferred_creators' => $validatedClientData['preferred_creators'] ?? [],
+                    'default_project_settings' => $validatedClientData['default_project_settings'] ?? null,
+                    'preferred_project_types' => $validatedClientData['preferred_project_types'] ?? [],
+                    'preferred_budget_range' => $validatedClientData['preferred_budget_range'] ?? null,
+                    'preferred_timeline' => $validatedClientData['preferred_timeline'] ?? null,
+                ];
+
+                // Remove null values
+                $clientUpdateData = array_filter($clientUpdateData, function ($value) {
+                    return $value !== null;
+                });
+
+                $user->client->update($clientUpdateData);
+
+                // Mark client profile as complete
+                $user->client->update(['is_profile_complete' => true]);
+
+                // Re-fetch user with relationships
+                $updatedUser = User::with(['creator', 'client', 'ambassador', 'systemAdministrator', 'profile'])
+                    ->find($user->id);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => __('client.client_profile_completed_successfully'),
+                    'data' => [
+                        'user' => $updatedUser,
+                    ],
+                ]);
+            });
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'errors' => $e->errors()]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function AuthController.completeClientProfile: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
 }

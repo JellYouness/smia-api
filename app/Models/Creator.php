@@ -34,6 +34,7 @@ class Creator extends BaseModel
     'review_notes',
     'reviewed_at',
     'reviewed_by',
+    'is_profile_complete',
   ];
 
   protected $casts = [
@@ -57,6 +58,7 @@ class Creator extends BaseModel
     'hourly_rate' => 'float',
     'average_rating' => 'float',
     'rating_count' => 'integer',
+    'is_profile_complete' => 'boolean',
   ];
 
   protected $with = [

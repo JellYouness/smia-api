@@ -29,12 +29,14 @@ class Client extends BaseModel
     'preferred_creators',
     'project_count',
     'default_project_settings',
+    'is_profile_complete',
   ];
 
   protected $casts = [
     'languages' => 'array',
     'preferred_creators' => 'array',
     'default_project_settings' => 'array',
+    'is_profile_complete' => 'boolean',
   ];
 
   protected static function booted()

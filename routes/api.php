@@ -114,6 +114,8 @@ Route::middleware('auth:api')->group(
                         Route::post('/logout', 'logout');
                         Route::put('/profile', 'updateProfile');
                         Route::post('/complete-profile', 'completeProfile');
+                        Route::post('/complete-creator-profile', 'completeCreatorProfile');
+                        Route::post('/complete-client-profile', 'completeClientProfile');
                     }
                 );
             }
