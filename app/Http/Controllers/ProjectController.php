@@ -273,9 +273,15 @@ class ProjectController extends CrudController
                 'project.client:id,user_id,company_name,company_size,industry',
                 'project.client.user:id,first_name,last_name',
                 'project.client.user.profile:id,user_id,profile_picture',
+                'project.proposals:status',
             ])
                 ->where('creator_id', $creatorId)
                 ->orderByDesc('created_at');
+
+            // Remove project with proposals
+            $query->whereDoesntHave('project.proposals', function ($q) {
+                $q->where('status', PROJECT_PROPOSAL_STATUS::PENDING);
+            });
 
             $perPage = $request->input('per_page', 50);
             if ($perPage === 'all') {
