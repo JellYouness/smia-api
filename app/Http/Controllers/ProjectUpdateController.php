@@ -41,7 +41,7 @@ class ProjectUpdateController extends CrudController
       }
 
       $query = ProjectUpdate::where('project_id', $projectId)
-        ->with(['project', 'client', 'ambassador']);
+        ->with(['project', 'client.user.profile', 'ambassador.user.profile']);
 
       $perPage = $request->input('per_page', 50);
       if ($perPage === 'all') {
